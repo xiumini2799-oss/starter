@@ -26,21 +26,53 @@
     padding: 20px 16px 48px; max-width: 480px; margin: 0 auto;
   }
   h1, h2 { margin: 0; }
+  .hidden { display: none !important; }
 
-  .lg-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+  /* ---------- 로그인 화면 ---------- */
+  #loginScreen { min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+  .login-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 28px; margin-bottom: 8px; }
+  .login-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 32px; }
+  .login-google-btn {
+    display: flex; align-items: center; gap: 10px; padding: 12px 22px; border: 1px solid var(--ink);
+    background: #fff; color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 16px;
+  }
+  .login-guest-link { background: none; border: none; color: var(--ink-soft); font-size: 12px; text-decoration: underline; cursor: pointer; }
+  .login-error { font-size: 12px; color: var(--red-ink); margin-top: 14px; max-width: 280px; }
+
+  /* ---------- 헤더 / 계정 ---------- */
+  .lg-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); position: relative; }
   .lg-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
+  .lg-account-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; padding: 0; font-size: 14px; font-weight: 700; }
+  .lg-account-btn img { width: 100%; height: 100%; object-fit: cover; }
+  .lg-account-panel {
+    position: absolute; top: 42px; right: 0; background: #fff; border: 1px solid var(--ink);
+    padding: 14px; width: 210px; z-index: 20; display: none; box-shadow: 2px 2px 0 rgba(31,42,68,0.15);
+  }
+  .lg-account-panel.show { display: block; }
+  .lg-account-name { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+  .lg-account-email { font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; word-break: break-all; }
+  .lg-account-mode { font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; }
+  .lg-logout-btn, .lg-login-inline-btn { width: 100%; padding: 8px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .lg-sync-note { font-size: 11px; color: var(--ink-soft); text-align: right; margin-bottom: 14px; min-height: 14px; }
 
-  .lg-auth-row { display: flex; align-items: center; gap: 8px; }
-  .lg-auth-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--ink); background: #fff; font-size: 12px; font-weight: 700; color: var(--ink); cursor: pointer; }
-  .lg-user-chip { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
-  .lg-user-chip img { width: 22px; height: 22px; border-radius: 50%; }
-  .lg-logout-btn { background: none; border: none; color: var(--ink-soft); font-size: 11px; text-decoration: underline; cursor: pointer; padding: 0; }
-  .lg-sync-note { font-size: 11px; color: var(--ink-soft); text-align: right; margin-bottom: 14px; }
+  /* ---------- 상단 액션(저장/실행취소) ---------- */
+  .lg-action-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .lg-save-btn { flex: 2; padding: 12px; border: none; background: var(--ink); color: var(--paper); font-weight: 700; font-size: 14px; cursor: pointer; }
+  .lg-undo-btn { flex: 1; padding: 12px; border: 1px solid var(--ink-soft); background: #fff; color: var(--ink-soft); font-weight: 700; font-size: 12px; cursor: pointer; }
+  .lg-undo-btn:disabled { opacity: 0.4; cursor: default; }
 
   .lg-total-panel { border: 1px solid var(--ink); background: rgba(247,244,236,0.6); padding: 16px; margin-bottom: 18px; text-align: center; }
   .lg-total-label { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
   .lg-total-value { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 26px; }
   .lg-total-value.negative { color: var(--red-ink); }
+
+  /* ---------- 탭 ---------- */
+  .lg-tabbar { display: flex; border: 1px solid var(--ink); margin-bottom: 16px; }
+  .lg-tab-btn { flex: 1; padding: 10px; background: transparent; border: none; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; }
+  .lg-tab-btn.active { background: var(--ink); color: var(--paper); }
+  .lg-tab-panel { display: none; }
+  .lg-tab-panel.active { display: block; }
 
   .lg-quick-panel { margin-bottom: 16px; }
   .lg-quick-row { display: flex; gap: 8px; }
@@ -86,7 +118,9 @@
   .lg-tx-form input { padding: 8px 9px; border: 1px solid var(--paper-line); background: #fff; font-size: 13px; font-family: inherit; color: var(--ink); }
   .lg-tx-form .lg-row { display: flex; gap: 8px; }
   .lg-tx-form .lg-row input { flex: 1; }
-  .lg-tx-submit { padding: 9px; border: none; background: var(--stamp); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .lg-tx-btn-row { display: flex; gap: 8px; }
+  .lg-tx-submit { flex: 2; padding: 9px; border: none; background: var(--stamp); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .lg-tx-cancel { flex: 1; padding: 9px; border: 1px solid var(--paper-line); background: #fff; color: var(--ink-soft); font-weight: 700; font-size: 12px; cursor: pointer; }
 
   .lg-history-label { font-size: 12px; color: var(--ink-soft); font-weight: 700; margin: 4px 0 6px; }
   .lg-month-group { margin-bottom: 10px; }
@@ -122,84 +156,97 @@
   .lg-table-amount.out { color: var(--red-ink); }
   .lg-table-memo { color: var(--ink-soft); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .lg-footer { margin-top: 20px; text-align: center; }
-  .lg-reset-btn { background: none; border: 1px solid var(--paper-line); color: var(--ink-soft); font-size: 12px; padding: 6px 12px; cursor: pointer; }
-  .lg-confirm-box { font-size: 12px; color: var(--ink-soft); display: none; }
-  .lg-confirm-box.show { display: block; }
-  .lg-confirm-box button { margin-left: 8px; border: none; background: var(--red-ink); color: #fff; padding: 4px 10px; font-size: 12px; cursor: pointer; }
-  .lg-confirm-box button.cancel { background: var(--ink-soft); }
-  .lg-error { font-size: 12px; color: var(--red-ink); text-align: center; margin-top: 8px; }
-
   .lg-install-banner { display: none; border: 1px solid var(--stamp); background: #fff8ea; padding: 10px 12px; font-size: 12px; color: var(--ink); margin-bottom: 16px; align-items: center; justify-content: space-between; gap: 8px; }
   .lg-install-banner.show { display: flex; }
   .lg-install-banner button { border: none; background: var(--stamp); color: #fff; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
 </style>
 </head>
 <body>
-  <div class="lg-header">
-    <div class="lg-title">가계부</div>
-    <div class="lg-auth-row" id="authRow"></div>
-  </div>
-  <div id="syncNote" class="lg-sync-note"></div>
 
-  <div id="installBanner" class="lg-install-banner">
-    <span>홈 화면에 앱으로 추가할 수 있어요</span>
-    <button id="installBtn">추가</button>
-  </div>
-
-  <div class="lg-total-panel">
-    <div class="lg-total-label">전체 잔액</div>
-    <div id="totalValue" class="lg-total-value">0원</div>
+  <!-- 로그인 화면 -->
+  <div id="loginScreen">
+    <div class="login-title">가계부</div>
+    <div class="login-sub">구글 계정으로 로그인하면 여러 기기에서<br/>같은 가계부를 이어서 볼 수 있어요</div>
+    <button class="login-google-btn" id="loginBtnMain">구글로 로그인</button>
+    <button class="login-guest-link" id="guestBtn">로그인 없이 이 기기에서만 사용하기</button>
+    <div id="loginError" class="login-error"></div>
   </div>
 
-  <div class="lg-quick-panel">
-    <div class="lg-quick-row">
-      <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: @@ +100 커피 (없는 항목은 자동 생성)" />
-      <button id="quickBtn" class="lg-quick-btn">추가</button>
+  <!-- 메인 화면 -->
+  <div id="appScreen" class="hidden">
+    <div class="lg-header">
+      <div class="lg-title">가계부</div>
+      <button class="lg-account-btn" id="accountBtn">＋</button>
+      <div class="lg-account-panel" id="accountPanel">
+        <div class="lg-account-name" id="accountName"></div>
+        <div class="lg-account-email" id="accountEmail"></div>
+        <div class="lg-account-mode" id="accountMode"></div>
+        <button class="lg-logout-btn hidden" id="logoutBtn">로그아웃</button>
+        <button class="lg-login-inline-btn hidden" id="loginBtnInline">구글로 로그인</button>
+      </div>
     </div>
-    <div class="lg-quick-hint">항목 금액 [메모] · -는 출금, +는 입금 · 없는 항목명이면 자동으로 새 항목이 생겨요</div>
-    <div id="quickError" class="lg-error" style="display:none;"></div>
-  </div>
+    <div id="syncNote" class="lg-sync-note"></div>
 
-  <div class="lg-items-manage">
-    <button class="lg-manage-toggle" id="manageToggle">항목 관리 (추가 / 삭제)</button>
-    <div class="lg-manage-body" id="manageBody">
-      <div id="manageList"></div>
-      <div class="lg-add-item-row">
-        <input type="text" id="newItemName" class="lg-item-name-input" placeholder="새 항목 이름" />
-        <input type="number" id="newItemBalance" class="lg-item-bal-input" placeholder="시작 잔액(0)" />
-        <button id="addItemBtn">추가</button>
+    <div id="installBanner" class="lg-install-banner">
+      <span>홈 화면에 앱으로 추가할 수 있어요</span>
+      <button id="installBtn">추가</button>
+    </div>
+
+    <div class="lg-action-row">
+      <button class="lg-save-btn" id="saveBtn">저장하기</button>
+      <button class="lg-undo-btn" id="undoBtn" disabled>실행 취소</button>
+    </div>
+
+    <div class="lg-total-panel">
+      <div class="lg-total-label">전체 잔액</div>
+      <div id="totalValue" class="lg-total-value">0원</div>
+    </div>
+
+    <div class="lg-tabbar">
+      <button class="lg-tab-btn active" id="tabBtnItems" data-tab="items">항목</button>
+      <button class="lg-tab-btn" id="tabBtnHistory" data-tab="history">전체 내역</button>
+    </div>
+
+    <div class="lg-tab-panel active" id="tabPanelItems">
+      <div class="lg-quick-panel">
+        <div class="lg-quick-row">
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: @@ +100 커피 (없는 항목은 자동 생성)" />
+          <button id="quickBtn" class="lg-quick-btn">추가</button>
+        </div>
+        <div class="lg-quick-hint">항목 금액 [메모] · -는 출금, +는 입금 · 없는 항목명이면 자동으로 새 항목이 생겨요</div>
+        <div id="quickError" class="lg-error" style="display:none;"></div>
+      </div>
+
+      <div class="lg-items-manage">
+        <button class="lg-manage-toggle" id="manageToggle">항목 관리 (추가 / 삭제)</button>
+        <div class="lg-manage-body" id="manageBody">
+          <div id="manageList"></div>
+          <div class="lg-add-item-row">
+            <input type="text" id="newItemName" class="lg-item-name-input" placeholder="새 항목 이름" />
+            <input type="number" id="newItemBalance" class="lg-item-bal-input" placeholder="시작 잔액(0)" />
+            <button id="addItemBtn">추가</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="itemList"></div>
+    </div>
+
+    <div class="lg-tab-panel" id="tabPanelHistory">
+      <div class="lg-panel">
+        <div class="lg-section-title">전체 내역</div>
+        <div class="lg-summary-grid">
+          <div class="lg-stamp"><div class="lg-stamp-label">총 입금</div><div id="totalIn" class="lg-stamp-value income">0원</div></div>
+          <div class="lg-stamp"><div class="lg-stamp-label">총 출금</div><div id="totalOut" class="lg-stamp-value expense">0원</div></div>
+          <div class="lg-stamp"><div class="lg-stamp-label">순변동</div><div id="netChange" class="lg-stamp-value">0원</div></div>
+        </div>
+        <div id="allHistory"></div>
       </div>
     </div>
   </div>
 
-  <div id="itemList"></div>
-
-  <div class="lg-panel">
-    <div class="lg-section-title">전체 내역</div>
-    <div class="lg-summary-grid">
-      <div class="lg-stamp"><div class="lg-stamp-label">총 입금</div><div id="totalIn" class="lg-stamp-value income">0원</div></div>
-      <div class="lg-stamp"><div class="lg-stamp-label">총 출금</div><div id="totalOut" class="lg-stamp-value expense">0원</div></div>
-      <div class="lg-stamp"><div class="lg-stamp-label">순변동</div><div id="netChange" class="lg-stamp-value">0원</div></div>
-    </div>
-    <div id="allHistory"></div>
-  </div>
-
-  <div class="lg-footer">
-    <div id="confirmBox" class="lg-confirm-box">
-      정말 모든 기록과 잔액을 초기값으로 되돌릴까요?
-      <button id="confirmResetBtn">초기화</button>
-      <button id="cancelResetBtn" class="cancel">취소</button>
-    </div>
-    <button id="resetBtn" class="lg-reset-btn">전체 초기화</button>
-  </div>
-
 <script type="module">
   // ===================== Firebase (구글 로그인 + 기기 간 동기화) =====================
-  // 아래 firebaseConfig를 본인 Firebase 프로젝트 설정으로 교체하세요.
-  // Firebase 콘솔(console.firebase.google.com) → 프로젝트 생성 → Authentication에서 Google 제공업체 사용 설정
-  // → Firestore Database 만들기(테스트 모드) → 프로젝트 설정 → 웹 앱 추가 → 아래 config 복사해서 붙여넣기
-  // → Authentication → Settings → 승인된 도메인에 본인 GitHub Pages 주소(예: username.github.io) 추가
   const firebaseConfig = {
     apiKey: "AIzaSyBCZ3e2j2h5pDtXqlgqXkhK8iIlHCeZNFU",
     authDomain: "gagyeboo1234.firebaseapp.com",
@@ -209,14 +256,9 @@
     appId: "1:164386253226:web:80e09a37666961e3e2a3d3",
   };
 
-  let auth = null, db = null, currentUser = null, firebaseReady = false;
+  let auth = null, db = null, currentUser = null, firebaseReady = false, guestMode = false;
 
   async function initFirebase() {
-    if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-      // 설정을 안 넣은 상태 - 로그인 없이 로컬 저장만 사용
-      renderAuthRow();
-      return;
-    }
     try {
       const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
       const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } =
@@ -230,49 +272,56 @@
       firebaseReady = true;
 
       window.__lgSignIn = async () => {
+        document.getElementById("loginError").textContent = "";
         try {
           const provider = new GoogleAuthProvider();
           await signInWithPopup(auth, provider);
         } catch (e) {
-          setSyncNote("로그인에 실패했어요.");
+          document.getElementById("loginError").textContent = "로그인에 실패했어요. 다시 시도해주세요.";
         }
       };
       window.__lgSignOut = async () => {
         try { await signOut(auth); } catch (e) {}
+        guestMode = false;
+        showLoginScreen();
       };
       window.__lgSaveCloud = async (data) => {
-        if (!currentUser) return;
+        if (!currentUser) return false;
         try {
           await setDoc(doc(db, "ledgers", currentUser.uid), data);
           setSyncNote("클라우드에 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
+          return true;
         } catch (e) {
-          setSyncNote("클라우드 저장 실패 (로컬에는 저장됨)");
+          setSyncNote("클라우드 저장 실패 (이 기기에는 저장됨)");
+          return false;
         }
       };
 
       onAuthStateChanged(auth, async (user) => {
         currentUser = user;
-        renderAuthRow();
         if (user) {
+          guestMode = false;
           try {
             const snap = await getDoc(doc(db, "ledgers", user.uid));
             if (snap.exists()) {
               state = snap.data();
               saveLocal();
-              render();
               setSyncNote("클라우드 데이터 불러옴");
             } else {
               await window.__lgSaveCloud(state);
             }
           } catch (e) {
-            setSyncNote("클라우드 연결 실패 (로컬 데이터로 계속 사용)");
+            setSyncNote("클라우드 연결 실패 (이 기기의 데이터로 계속 사용)");
           }
-        } else {
-          setSyncNote("");
+          showAppScreen();
+        } else if (!guestMode) {
+          showLoginScreen();
         }
+        renderAccountPanel();
+        render();
       });
     } catch (e) {
-      setSyncNote("Firebase 연결 실패 - 로컬 저장만 사용됩니다");
+      document.getElementById("loginError").textContent = "구글 로그인 연결에 실패했어요. '로그인 없이 사용하기'를 이용해주세요.";
     }
   }
 
@@ -281,40 +330,54 @@
     if (el) el.textContent = text;
   }
 
-  function renderAuthRow() {
-    const el = document.getElementById("authRow");
-    if (!el) return;
-    if (!firebaseConfig || firebaseConfig.apiKey === "YOUR_API_KEY") {
-      el.innerHTML = "";
-      return;
-    }
+  function showLoginScreen() {
+    document.getElementById("loginScreen").classList.remove("hidden");
+    document.getElementById("appScreen").classList.add("hidden");
+  }
+  function showAppScreen() {
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("appScreen").classList.remove("hidden");
+  }
+
+  function renderAccountPanel() {
+    const nameEl = document.getElementById("accountName");
+    const emailEl = document.getElementById("accountEmail");
+    const modeEl = document.getElementById("accountMode");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const loginInlineBtn = document.getElementById("loginBtnInline");
+    const accountBtn = document.getElementById("accountBtn");
+
     if (currentUser) {
-      el.innerHTML =
-        '<div class="lg-user-chip">' +
-          (currentUser.photoURL ? '<img src="' + currentUser.photoURL + '" />' : '') +
-          '<span>' + esc(currentUser.displayName || currentUser.email || "사용자") + '</span>' +
-          '<button class="lg-logout-btn" id="logoutBtn">로그아웃</button>' +
-        '</div>';
-      const btn = document.getElementById("logoutBtn");
-      if (btn) btn.onclick = () => window.__lgSignOut && window.__lgSignOut();
+      nameEl.textContent = currentUser.displayName || "사용자";
+      emailEl.textContent = currentUser.email || "";
+      modeEl.textContent = "구글 계정으로 로그인됨";
+      logoutBtn.classList.remove("hidden");
+      loginInlineBtn.classList.add("hidden");
+      accountBtn.innerHTML = currentUser.photoURL ? '<img src="' + currentUser.photoURL + '" />' : "👤";
     } else {
-      el.innerHTML = '<button class="lg-auth-btn" id="loginBtn">구글로 로그인</button>';
-      const btn = document.getElementById("loginBtn");
-      if (btn) btn.onclick = () => window.__lgSignIn && window.__lgSignIn();
+      nameEl.textContent = "게스트 모드";
+      emailEl.textContent = "";
+      modeEl.textContent = "이 기기에만 데이터가 저장돼요";
+      logoutBtn.classList.add("hidden");
+      loginInlineBtn.classList.remove("hidden");
+      accountBtn.innerHTML = "👤";
     }
   }
 
+  document.getElementById("loginBtnMain").onclick = () => window.__lgSignIn && window.__lgSignIn();
+  document.getElementById("loginBtnInline").onclick = () => window.__lgSignIn && window.__lgSignIn();
+  document.getElementById("guestBtn").onclick = () => { guestMode = true; showAppScreen(); renderAccountPanel(); render(); };
+  document.getElementById("logoutBtn").onclick = () => window.__lgSignOut && window.__lgSignOut();
+  document.getElementById("accountBtn").onclick = () => document.getElementById("accountPanel").classList.toggle("show");
+  document.addEventListener("click", (e) => {
+    const panel = document.getElementById("accountPanel");
+    const btn = document.getElementById("accountBtn");
+    if (panel.classList.contains("show") && !panel.contains(e.target) && e.target !== btn) panel.classList.remove("show");
+  });
+
   // ===================== 가계부 앱 로직 =====================
   const PALETTE = ["#C08A2E","#2F6B4F","#3A4E8C","#52616B","#6B4E71","#2E7D82","#A8562E","#8C3A4E","#4E6B3A","#8A7C52"];
-  const DEFAULT_ITEMS = [
-    { name: "용돈", initialBalance: -57558, color: PALETTE[0] },
-    { name: "비상금", initialBalance: 1660680, color: PALETTE[1] },
-    { name: "통신비", initialBalance: 2231, color: PALETTE[2] },
-    { name: "교통비", initialBalance: 6760, color: PALETTE[3] },
-    { name: "경조사비", initialBalance: 113200, color: PALETTE[4] },
-    { name: "저축", initialBalance: 30000, color: PALETTE[5] },
-  ];
-  const STORAGE_KEY = "household-ledger-v2";
+  const STORAGE_KEY = "household-ledger-v3";
 
   function loadLocal() {
     try {
@@ -322,26 +385,32 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         return {
-          items: Array.isArray(parsed.items) && parsed.items.length ? parsed.items : DEFAULT_ITEMS.map((i) => ({...i})),
+          items: Array.isArray(parsed.items) ? parsed.items : [],
           transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
         };
       }
     } catch (e) {}
-    return { items: DEFAULT_ITEMS.map((i) => ({...i})), transactions: [] };
+    return { items: [], transactions: [] };
   }
 
   let state = loadLocal();
   let openItem = null;
   let editingBalanceItem = null;
   let txDraftType = {};
+  let activeTab = "items";
+  let lastTxId = null;
 
   function saveLocal() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
     catch (e) { console.error("로컬 저장 실패", e); }
   }
-  function saveState() {
+  async function saveState(showNote) {
     saveLocal();
-    if (firebaseReady && currentUser && window.__lgSaveCloud) window.__lgSaveCloud(state);
+    if (firebaseReady && currentUser && window.__lgSaveCloud) {
+      await window.__lgSaveCloud(state);
+    } else if (showNote) {
+      setSyncNote("이 기기에 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
+    }
   }
 
   function makeId() { return (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2)); }
@@ -375,26 +444,31 @@
 
   function addTransaction(item, type, amount, memo, date) {
     ensureItem(item);
-    state.transactions.push({
-      id: makeId(), item, type, amount,
-      memo: (memo || "").trim(), date: date || todayISO(), createdAt: Date.now(),
-    });
+    const tx = { id: makeId(), item, type, amount, memo: (memo || "").trim(), date: date || todayISO(), createdAt: Date.now() };
+    state.transactions.push(tx);
+    lastTxId = tx.id;
     saveState();
     render();
   }
 
   function deleteTransaction(id) {
     state.transactions = state.transactions.filter((x) => x.id !== id);
+    if (lastTxId === id) lastTxId = null;
     saveState();
     render();
   }
 
+  function undoLast() {
+    if (!state.transactions.length) return;
+    const sorted = [...state.transactions].sort((a, b) => b.createdAt - a.createdAt);
+    deleteTransaction(sorted[0].id);
+  }
+
   function setBalance(item, val) {
     const prev = currentBalance(item);
-    state.transactions.push({
-      id: makeId(), item, type: "adjust", amount: val - prev,
-      memo: "잔액 직접 설정", date: todayISO(), createdAt: Date.now(),
-    });
+    const tx = { id: makeId(), item, type: "adjust", amount: val - prev, memo: "잔액 직접 설정", date: todayISO(), createdAt: Date.now() };
+    state.transactions.push(tx);
+    lastTxId = tx.id;
     saveState();
     editingBalanceItem = null;
     render();
@@ -414,13 +488,6 @@
     state.transactions = state.transactions.filter((t) => t.item !== name);
     if (openItem === name) openItem = null;
     saveState();
-    render();
-  }
-
-  function resetAll() {
-    state = { items: DEFAULT_ITEMS.map((i) => ({...i})), transactions: [] };
-    saveState();
-    openItem = null;
     render();
   }
 
@@ -450,7 +517,6 @@
     input.value = "";
   }
 
-  // 항목별 거래 내역을 월별로 묶고, 각 월의 이월 잔액(전월 이월분)을 계산
   function buildMonthGroups(name) {
     const it = getItem(name);
     const list = state.transactions
@@ -476,73 +542,80 @@
   }
 
   function render() {
+    const undoBtn = document.getElementById("undoBtn");
+    undoBtn.disabled = state.transactions.length === 0;
+
     const total = state.items.reduce((s, it) => s + currentBalance(it.name), 0);
     const totalEl = document.getElementById("totalValue");
     totalEl.textContent = formatWon(total);
     totalEl.className = "lg-total-value" + (total < 0 ? " negative" : "");
 
-    // 항목 관리 목록
     const manageListEl = document.getElementById("manageList");
     manageListEl.innerHTML = state.items.map((it) =>
       '<div class="lg-manage-row"><span><span class="lg-item-dot" style="display:inline-block;background:' + it.color + '"></span>' + esc(it.name) + '</span>' +
       '<button class="lg-manage-del" data-remove="' + esc(it.name) + '">삭제</button></div>'
-    ).join("") || '<div class="lg-empty-tx">항목이 없어요.</div>';
+    ).join("") || '<div class="lg-empty-tx">항목이 아직 없어요. 아래에서 추가해보세요.</div>';
 
-    // 항목 카드
     const listEl = document.getElementById("itemList");
-    listEl.innerHTML = state.items.map((it) => {
-      const item = it.name;
-      const bal = currentBalance(item);
-      const isOpen = openItem === item;
-      const curType = txDraftType[item] || "out";
-      const groups = buildMonthGroups(item);
+    if (state.items.length === 0) {
+      listEl.innerHTML = '<div class="lg-empty">아직 항목이 없어요. "항목 관리"에서 첫 항목을 추가해보세요.</div>';
+    } else {
+      listEl.innerHTML = state.items.map((it) => {
+        const item = it.name;
+        const bal = currentBalance(item);
+        const isOpen = openItem === item;
+        const curType = txDraftType[item] || "out";
+        const groups = buildMonthGroups(item);
 
-      const historyHtml = groups.length === 0
-        ? '<div class="lg-empty-tx">아직 기록이 없어요.</div>'
-        : groups.map((g) => {
-            const txHtml = g.txs.map((t) => {
-              const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
-              return '<div class="lg-tx-item">' +
-                '<div class="lg-tx-left"><span class="lg-tx-date">' + formatDateLabel(t.date) + '</span>' +
-                (t.memo ? '<span class="lg-tx-memo">' + esc(t.memo) + '</span>' : '') + '</div>' +
-                '<div class="lg-tx-right"><span class="lg-tx-amount ' + t.type + '">' +
-                (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</span>' +
-                '<button class="lg-delete" data-del="' + t.id + '">×</button></div></div>';
+        const historyHtml = groups.length === 0
+          ? '<div class="lg-empty-tx">아직 기록이 없어요.</div>'
+          : groups.map((g) => {
+              const txHtml = g.txs.map((t) => {
+                const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
+                return '<div class="lg-tx-item">' +
+                  '<div class="lg-tx-left"><span class="lg-tx-date">' + formatDateLabel(t.date) + '</span>' +
+                  (t.memo ? '<span class="lg-tx-memo">' + esc(t.memo) + '</span>' : '') + '</div>' +
+                  '<div class="lg-tx-right"><span class="lg-tx-amount ' + t.type + '">' +
+                  (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</span>' +
+                  '<button class="lg-delete" data-del="' + t.id + '">×</button></div></div>';
+              }).join("");
+              return '<div class="lg-month-group"><div class="lg-month-header">' + formatMonthLabel(g.month) +
+                ' · 이월 ' + formatWon(g.opening) + '</div>' + txHtml + '</div>';
             }).join("");
-            return '<div class="lg-month-group"><div class="lg-month-header">' + formatMonthLabel(g.month) +
-              ' · 이월 ' + formatWon(g.opening) + '</div>' + txHtml + '</div>';
-          }).join("");
 
-      return '<div class="lg-item-card' + (isOpen ? ' open' : '') + '" data-item="' + esc(item) + '">' +
-        '<div class="lg-item-head" data-toggle="' + esc(item) + '">' +
-          '<div class="lg-item-name-row"><span class="lg-item-dot" style="background:' + it.color + '"></span>' +
-          '<span class="lg-item-name">' + esc(item) + '</span></div>' +
-          '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
-        '</div>' +
-        '<div class="lg-item-body">' +
-          (editingBalanceItem === item
-            ? '<div class="lg-balance-edit show"><input type="number" id="balEdit-' + esc(item) + '" value="' + bal + '" />' +
-              '<button data-savebal="' + esc(item) + '">저장</button></div>'
-            : '<div class="lg-balance-set"><button class="lg-link-btn" data-editbal="' + esc(item) + '">잔액 직접 설정</button></div>') +
-          '<div class="lg-tx-form">' +
-            '<div class="lg-type-switch">' +
-              '<button type="button" class="lg-type-btn out' + (curType === "out" ? " active out" : "") + '" data-settype="' + esc(item) + '" data-type="out">출금</button>' +
-              '<button type="button" class="lg-type-btn in' + (curType === "in" ? " active in" : "") + '" data-settype="' + esc(item) + '" data-type="in">입금</button>' +
-            '</div>' +
-            '<input type="number" inputmode="numeric" min="0" placeholder="금액" id="amt-' + esc(item) + '" />' +
-            '<div class="lg-row">' +
-              '<input type="text" placeholder="메모 (선택)" id="memo-' + esc(item) + '" />' +
-              '<input type="date" id="date-' + esc(item) + '" value="' + todayISO() + '" />' +
-            '</div>' +
-            '<button type="button" class="lg-tx-submit" data-submit="' + esc(item) + '">기록하기</button>' +
+        return '<div class="lg-item-card' + (isOpen ? ' open' : '') + '" data-item="' + esc(item) + '">' +
+          '<div class="lg-item-head" data-toggle="' + esc(item) + '">' +
+            '<div class="lg-item-name-row"><span class="lg-item-dot" style="background:' + it.color + '"></span>' +
+            '<span class="lg-item-name">' + esc(item) + '</span></div>' +
+            '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
           '</div>' +
-          '<div class="lg-history-label">거래 내역 (월별)</div>' +
-          historyHtml +
-        '</div>' +
-      '</div>';
-    }).join("");
+          '<div class="lg-item-body">' +
+            (editingBalanceItem === item
+              ? '<div class="lg-balance-edit show"><input type="number" id="balEdit-' + esc(item) + '" value="' + bal + '" />' +
+                '<button data-savebal="' + esc(item) + '">저장</button></div>'
+              : '<div class="lg-balance-set"><button class="lg-link-btn" data-editbal="' + esc(item) + '">잔액 직접 설정</button></div>') +
+            '<div class="lg-tx-form">' +
+              '<div class="lg-type-switch">' +
+                '<button type="button" class="lg-type-btn out' + (curType === "out" ? " active out" : "") + '" data-settype="' + esc(item) + '" data-type="out">출금</button>' +
+                '<button type="button" class="lg-type-btn in' + (curType === "in" ? " active in" : "") + '" data-settype="' + esc(item) + '" data-type="in">입금</button>' +
+              '</div>' +
+              '<input type="number" inputmode="numeric" min="0" placeholder="금액" id="amt-' + esc(item) + '" />' +
+              '<div class="lg-row">' +
+                '<input type="text" placeholder="메모 (선택)" id="memo-' + esc(item) + '" />' +
+                '<input type="date" id="date-' + esc(item) + '" value="' + todayISO() + '" />' +
+              '</div>' +
+              '<div class="lg-tx-btn-row">' +
+                '<button type="button" class="lg-tx-submit" data-submit="' + esc(item) + '">기록하기</button>' +
+                '<button type="button" class="lg-tx-cancel" data-cancel="' + esc(item) + '">되돌리기</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="lg-history-label">거래 내역 (월별)</div>' +
+            historyHtml +
+          '</div>' +
+        '</div>';
+      }).join("");
+    }
 
-    // 전체 내역
     const all = [...state.transactions].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
     const totalIn = all.filter((t) => t.type === "in").reduce((s, t) => s + t.amount, 0);
     const totalOut = all.filter((t) => t.type === "out").reduce((s, t) => s + t.amount, 0);
@@ -600,6 +673,18 @@
         txDraftType[item] = "out";
       };
     });
+    document.querySelectorAll("[data-cancel]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-cancel");
+        document.getElementById("amt-" + item).value = "";
+        document.getElementById("memo-" + item).value = "";
+        document.getElementById("date-" + item).value = todayISO();
+        txDraftType[item] = "out";
+        render();
+        openItem = item;
+      };
+    });
     document.querySelectorAll("[data-del]").forEach((el) => {
       el.onclick = (e) => { e.stopPropagation(); deleteTransaction(el.getAttribute("data-del")); };
     });
@@ -619,9 +704,17 @@
     if (ok) { nameEl.value = ""; balEl.value = ""; render(); }
   };
 
-  document.getElementById("resetBtn").onclick = () => { document.getElementById("confirmBox").classList.add("show"); };
-  document.getElementById("confirmResetBtn").onclick = () => { resetAll(); document.getElementById("confirmBox").classList.remove("show"); };
-  document.getElementById("cancelResetBtn").onclick = () => { document.getElementById("confirmBox").classList.remove("show"); };
+  document.getElementById("saveBtn").onclick = () => saveState(true);
+  document.getElementById("undoBtn").onclick = () => undoLast();
+
+  document.querySelectorAll(".lg-tab-btn").forEach((btn) => {
+    btn.onclick = () => {
+      activeTab = btn.getAttribute("data-tab");
+      document.querySelectorAll(".lg-tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
+      document.getElementById("tabPanelItems").classList.toggle("active", activeTab === "items");
+      document.getElementById("tabPanelHistory").classList.toggle("active", activeTab === "history");
+    };
+  });
 
   let deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById("installBanner").classList.add("show"); });
@@ -637,6 +730,7 @@
     window.addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => {}); });
   }
 
+  renderAccountPanel();
   render();
   initFirebase();
 </script>
