@@ -262,6 +262,32 @@
   </div>
 
 <script type="module">
+  // ===================== 뒤로가기 두 번 눌러 종료 (최대한 빨리 등록) =====================
+  function armExitGuard() {
+    history.pushState({ lgExitGuard: true }, "", location.href);
+  }
+  armExitGuard();
+  armExitGuard();
+
+  let exitPrimed = false;
+  let exitPrimedTimer = null;
+
+  window.addEventListener("popstate", () => {
+    if (exitPrimed) {
+      exitPrimed = false;
+      clearTimeout(exitPrimedTimer);
+      document.getElementById("exitToast").classList.remove("show");
+      return;
+    }
+    exitPrimed = true;
+    armExitGuard();
+    document.getElementById("exitToast").classList.add("show");
+    exitPrimedTimer = setTimeout(() => {
+      exitPrimed = false;
+      document.getElementById("exitToast").classList.remove("show");
+    }, 2000);
+  });
+
   // ===================== Firebase (구글 로그인 + 기기 간 동기화) =====================
   const firebaseConfig = {
     apiKey: "AIzaSyBCZ3e2j2h5pDtXqlgqXkhK8iIlHCeZNFU",
@@ -736,33 +762,6 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => {}); });
   }
-
-  // ===================== 뒤로가기 두 번 눌러 종료 =====================
-  function armExitGuard() {
-    history.pushState({ lgExitGuard: true }, "", location.href);
-  }
-  armExitGuard();
-
-  let exitPrimed = false;
-  let exitPrimedTimer = null;
-
-  window.addEventListener("popstate", () => {
-    if (exitPrimed) {
-      // 두 번째 뒤로가기 - 다시 붙잡지 않고 그대로 종료(뒤로) 진행되도록 둠
-      exitPrimed = false;
-      clearTimeout(exitPrimedTimer);
-      document.getElementById("exitToast").classList.remove("show");
-      return;
-    }
-    // 첫 번째 뒤로가기 - 안내만 보여주고 자리를 다시 지켜둠
-    exitPrimed = true;
-    armExitGuard();
-    document.getElementById("exitToast").classList.add("show");
-    exitPrimedTimer = setTimeout(() => {
-      exitPrimed = false;
-      document.getElementById("exitToast").classList.remove("show");
-    }, 2000);
-  });
 
   renderAccountPanel();
   render();
