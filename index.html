@@ -82,7 +82,9 @@
   .lg-error { font-size: 14px; color: var(--red-ink); margin-top: 6px; }
 
   .lg-items-manage { margin-bottom: 16px; }
-  .lg-manage-toggle { width: 100%; padding: 9px; background: #fff; border: 1px solid var(--paper-line); color: var(--ink-soft); font-size: 12px; cursor: pointer; }
+  .lg-manage-toggle { width: 100%; padding: 9px 12px; background: #fff; border: 1px solid var(--paper-line); color: var(--ink-soft); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+  .lg-manage-chevron { display: inline-block; transition: transform 0.2s ease; font-size: 12px; }
+  .lg-manage-chevron.open { transform: rotate(180deg); }
   .lg-manage-body { display: none; border: 1px solid var(--ink); border-top: none; padding: 12px 14px; background: rgba(247,244,236,0.6); }
   .lg-manage-body.show { display: block; }
   .lg-manage-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--paper-line); font-size: 13px; }
@@ -161,15 +163,21 @@
   .lg-ratio-legend-row { display: flex; align-items: center; gap: 8px; }
   .lg-ratio-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .lg-ratio-pct { font-weight: 700; margin-left: auto; padding-left: 12px; }
+  .lg-sub-title { margin-top: 8px; font-size: 13px; }
 
-  .lg-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .lg-table th { text-align: left; font-weight: 700; color: var(--ink-soft); border-bottom: 1px solid var(--ink); padding: 6px 4px; font-size: 11px; }
+  .lg-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  .lg-table th { text-align: left; font-weight: 700; color: var(--ink-soft); border-bottom: 1px solid var(--ink); padding: 6px 4px; font-size: 11px; white-space: nowrap; }
   .lg-table td { padding: 7px 4px; border-bottom: 1px solid var(--paper-line); vertical-align: middle; }
   .lg-table-tag { color: #fff; font-size: 10px; padding: 2px 6px; white-space: nowrap; }
   .lg-table-amount { font-weight: 700; white-space: nowrap; }
   .lg-table-amount.in { color: var(--green-ink); }
   .lg-table-amount.out { color: var(--red-ink); }
-  .lg-table-memo { color: var(--ink-soft); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lg-table-memo { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lg-table col.col-date { width: 15%; }
+  .lg-table col.col-item { width: 24%; }
+  .lg-table col.col-type { width: 14%; }
+  .lg-table col.col-amount { width: 24%; }
+  .lg-table col.col-memo { width: 23%; }
 
   .lg-install-banner { display: none; border: 1px solid var(--stamp); background: #fff8ea; padding: 10px 12px; font-size: 12px; color: var(--ink); margin-bottom: 16px; align-items: center; justify-content: space-between; gap: 8px; }
   .lg-install-banner.show { display: flex; }
@@ -247,7 +255,7 @@
       </div>
 
       <div class="lg-items-manage">
-        <button class="lg-manage-toggle" id="manageToggle">항목 관리 (추가 / 삭제)</button>
+        <button class="lg-manage-toggle" id="manageToggle"><span>항목 관리 (추가 / 삭제)</span><span class="lg-manage-chevron" id="manageChevron">▾</span></button>
         <div class="lg-manage-body" id="manageBody">
           <div id="manageList"></div>
           <div class="lg-add-item-row">
@@ -270,6 +278,10 @@
           <div class="lg-stamp"><div class="lg-stamp-label">순변동</div><div id="netChange" class="lg-stamp-value">0원</div></div>
         </div>
         <div id="ratioChart" class="lg-ratio-chart"></div>
+        <div class="lg-section-title lg-sub-title" id="incomeByItemTitle">입금 항목별 비율</div>
+        <div id="incomeByItemChart" class="lg-ratio-chart"></div>
+        <div class="lg-section-title lg-sub-title" id="expenseByItemTitle">출금 항목별 비율</div>
+        <div id="expenseByItemChart" class="lg-ratio-chart"></div>
         <div id="allHistory"></div>
       </div>
     </div>
@@ -625,6 +637,43 @@
     return groups;
   }
 
+  function renderItemBreakdown(elId, type, titleId) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const titleEl = titleId ? document.getElementById(titleId) : null;
+    const map = {};
+    for (const t of state.transactions) {
+      if (t.type !== type) continue;
+      map[t.item] = (map[t.item] || 0) + t.amount;
+    }
+    const entries = Object.entries(map).filter(([, amt]) => amt > 0).sort((a, b) => b[1] - a[1]);
+    const total = entries.reduce((s, [, amt]) => s + amt, 0);
+    if (total === 0) {
+      el.innerHTML = "";
+      if (titleEl) titleEl.classList.add("hidden");
+      return;
+    }
+    if (titleEl) titleEl.classList.remove("hidden");
+    let cursor = 0;
+    const gradientParts = [];
+    const legendParts = [];
+    entries.forEach(([name, amt]) => {
+      const pct = Math.round((amt / total) * 100);
+      const deg = (amt / total) * 360;
+      const it = getItem(name);
+      const color = it ? it.color : "#8A7C52";
+      gradientParts.push(color + " " + cursor + "deg " + (cursor + deg) + "deg");
+      cursor += deg;
+      legendParts.push(
+        '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background:' + color + ';"></span>' +
+        '<span>' + esc(name) + '</span><span class="lg-ratio-pct">' + pct + '%</span></div>'
+      );
+    });
+    el.innerHTML =
+      '<div class="lg-ratio-donut" style="background: conic-gradient(' + gradientParts.join(", ") + ');"></div>' +
+      '<div class="lg-ratio-legend">' + legendParts.join("") + '</div>';
+  }
+
   function render() {
     const total = state.items.reduce((s, it) => s + currentBalance(it.name), 0);
     const totalEl = document.getElementById("totalValue");
@@ -726,13 +775,16 @@
         '</div>';
     }
 
+    renderItemBreakdown("incomeByItemChart", "in", "incomeByItemTitle");
+    renderItemBreakdown("expenseByItemChart", "out", "expenseByItemTitle");
+
     const histEl = document.getElementById("allHistory");
     if (all.length === 0) {
       histEl.innerHTML = '<div class="lg-empty">아직 기록이 없어요.</div>';
     } else {
       const colorMap = {};
       state.items.forEach((i) => (colorMap[i.name] = i.color));
-      histEl.innerHTML = '<table class="lg-table"><thead><tr><th>날짜</th><th>항목</th><th>구분</th><th>금액</th><th>메모</th></tr></thead><tbody>' +
+      histEl.innerHTML = '<table class="lg-table"><colgroup><col class="col-date"><col class="col-item"><col class="col-type"><col class="col-amount"><col class="col-memo"></colgroup><thead><tr><th>날짜</th><th>항목</th><th>구분</th><th>금액</th><th>메모</th></tr></thead><tbody>' +
         all.map((t) => {
           const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
           const typeLabel = t.type === "in" ? "입금" : t.type === "out" ? "출금" : "설정";
@@ -814,7 +866,10 @@
   document.getElementById("quickBtn").onclick = handleQuickAdd;
   document.getElementById("quickInput").addEventListener("keydown", (e) => { if (e.key === "Enter") handleQuickAdd(); });
 
-  document.getElementById("manageToggle").onclick = () => { document.getElementById("manageBody").classList.toggle("show"); };
+  document.getElementById("manageToggle").onclick = () => {
+    document.getElementById("manageBody").classList.toggle("show");
+    document.getElementById("manageChevron").classList.toggle("open");
+  };
   document.getElementById("addItemBtn").onclick = () => {
     const nameEl = document.getElementById("newItemName");
     const balEl = document.getElementById("newItemBalance");
