@@ -211,10 +211,10 @@
     <div class="lg-tab-panel active" id="tabPanelItems">
       <div class="lg-quick-panel">
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: 비상금 +1000" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
-        <div id="quickError" class="lg-error" style="display:none;"></div>
+        <div id="quickError" class="lg-error">형식: 항목 금액 메모</div>
       </div>
 
       <div class="lg-items-manage">
@@ -496,22 +496,13 @@
     const input = document.getElementById("quickInput");
     const errBox = document.getElementById("quickError");
     const raw = input.value.trim();
-    errBox.style.display = "none";
     if (!raw) return;
     const tokens = raw.split(/\s+/);
-    if (tokens.length < 2) {
-      errBox.textContent = "형식: 항목 금액 [메모] (예: @@ +100 커피)";
-      errBox.style.display = "block";
-      return;
-    }
+    if (tokens.length < 2) return;
     const item = tokens[0];
-    const m = tokens[1].match(/^([+-]?)(\d+)$/);
-    if (!m) {
-      errBox.textContent = "금액은 숫자로 입력해주세요 (예: -3200, +9)";
-      errBox.style.display = "block";
-      return;
-    }
-    const type = m[1] === "+" ? "in" : "out";
+    const m = tokens[1].match(/^(-?)(\d+)$/);
+    if (!m) return;
+    const type = m[1] === "-" ? "out" : "in";
     const amount = Number(m[2]);
     const memo = tokens.slice(2).join(" ");
     addTransaction(item, type, amount, memo, todayISO());
