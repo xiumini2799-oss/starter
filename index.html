@@ -29,7 +29,9 @@
   .hidden { display: none !important; }
 
   /* ---------- 로그인 화면 ---------- */
-  #loginScreen { min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+  #loginScreen, #loadingScreen { min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+  .splash-logo { width: 88px; height: 88px; border-radius: 20px; object-fit: cover; margin-bottom: 16px; border: 1px solid var(--paper-line); }
+  .splash-tagline { font-family: 'Noto Sans KR', -apple-system, 'Malgun Gothic', sans-serif; font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
   .login-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 28px; margin-bottom: 8px; }
   .login-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 32px; }
   .login-google-btn {
@@ -159,6 +161,17 @@
   .lg-install-banner { display: none; border: 1px solid var(--stamp); background: #fff8ea; padding: 10px 12px; font-size: 12px; color: var(--ink); margin-bottom: 16px; align-items: center; justify-content: space-between; gap: 8px; }
   .lg-install-banner.show { display: flex; }
   .lg-install-banner button { border: none; background: var(--stamp); color: #fff; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+  .lg-exit-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(31,42,68,0.45);
+    align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  .lg-exit-overlay.show { display: flex; }
+  .lg-exit-box { background: var(--paper); border: 1px solid var(--ink); padding: 24px 20px; max-width: 300px; width: 100%; text-align: center; }
+  .lg-exit-msg { font-size: 15px; color: var(--ink); margin-bottom: 18px; }
+  .lg-exit-btns { display: flex; gap: 10px; }
+  .lg-exit-yes { flex: 1; padding: 10px; border: 1px solid var(--paper-line); background: #fff; color: var(--ink-soft); font-size: 13px; cursor: pointer; }
+  .lg-exit-no { flex: 1; padding: 10px; border: none; background: var(--stamp); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -168,12 +181,30 @@
     <button id="installBtn">추가</button>
   </div>
 
+  <!-- 스플래시 화면 -->
+  <div id="loadingScreen">
+    <img src="./icon-512.png" class="splash-logo" alt="가계부" />
+    <div class="login-title">가계부</div>
+    <div class="splash-tagline">제약 없는 삶</div>
+  </div>
+
   <!-- 로그인 화면 -->
-  <div id="loginScreen">
+  <div id="loginScreen" class="hidden">
     <div class="login-title">가계부</div>
     <button class="login-google-btn" id="loginBtnMain">구글로 로그인</button>
     <button class="login-guest-link" id="guestBtn">로그인 없이 이 기기에서만 사용하기</button>
     <div id="loginError" class="login-error"></div>
+  </div>
+
+  <!-- 뒤로가기 종료 확인 -->
+  <div id="exitConfirmOverlay" class="lg-exit-overlay">
+    <div class="lg-exit-box">
+      <div class="lg-exit-msg">가계부를 종료하시겠습니까?</div>
+      <div class="lg-exit-btns">
+        <button id="exitYesBtn" class="lg-exit-yes">예</button>
+        <button id="exitNoBtn" class="lg-exit-no">아니오</button>
+      </div>
+    </div>
   </div>
 
   <!-- 메인 화면 -->
@@ -280,7 +311,7 @@
       window.__lgSignOut = async () => {
         try { await signOut(auth); } catch (e) {}
         guestMode = false;
-        showLoginScreen();
+        revealLoginScreen();
       };
       window.__lgSaveCloud = async (data) => {
         if (!currentUser) return false;
@@ -312,17 +343,28 @@
             state = loadFromKey(cloudCacheKey(user.uid));
             setSyncNote("클라우드 연결 실패 (이 계정의 이 기기 저장분으로 계속 사용)");
           }
-          showAppScreen();
+          revealAppScreen();
         } else if (!guestMode) {
-          showLoginScreen();
+          revealLoginScreen();
         }
         renderAccountPanel();
         render();
       });
     } catch (e) {
+      revealLoginScreen();
       document.getElementById("loginError").textContent = "구글 로그인 연결에 실패했어요. '로그인 없이 사용하기'를 이용해주세요.";
     }
   }
+
+  let splashElapsed = false;
+  let pendingAuthDecision = null;
+  function tryRevealFromSplash() {
+    if (!splashElapsed || !pendingAuthDecision) return;
+    if (pendingAuthDecision === "app") showAppScreen(); else showLoginScreen();
+  }
+  function revealAppScreen() { pendingAuthDecision = "app"; tryRevealFromSplash(); }
+  function revealLoginScreen() { pendingAuthDecision = "login"; tryRevealFromSplash(); }
+  setTimeout(() => { splashElapsed = true; tryRevealFromSplash(); }, 3000);
 
   function setSyncNote(text) {
     const el = document.getElementById("syncNote");
@@ -330,10 +372,12 @@
   }
 
   function showLoginScreen() {
+    document.getElementById("loadingScreen").classList.add("hidden");
     document.getElementById("loginScreen").classList.remove("hidden");
     document.getElementById("appScreen").classList.add("hidden");
   }
   function showAppScreen() {
+    document.getElementById("loadingScreen").classList.add("hidden");
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("appScreen").classList.remove("hidden");
   }
@@ -562,9 +606,9 @@
                 if (editingTxId === t.id) {
                   return '<div class="lg-tx-item lg-tx-edit-row">' +
                     '<div class="lg-tx-edit-fields">' +
-                      '<input type="date" id="edit-date-' + t.id + '" value="' + t.date + '" />' +
-                      '<input type="number" inputmode="numeric" min="0" id="edit-amt-' + t.id + '" value="' + Math.abs(t.amount) + '" />' +
-                      '<input type="text" maxlength="20" placeholder="메모" id="edit-memo-' + t.id + '" value="' + esc(t.memo) + '" />' +
+                      '<input type="date" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-date-' + t.id + '" value="' + t.date + '" />' +
+                      '<input type="number" inputmode="numeric" min="0" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-amt-' + t.id + '" value="' + Math.abs(t.amount) + '" />' +
+                      '<input type="text" maxlength="20" placeholder="메모" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-memo-' + t.id + '" value="' + esc(t.memo) + '" />' +
                     '</div>' +
                     '<div class="lg-tx-edit-btns">' +
                       '<button data-savetx="' + t.id + '">저장</button>' +
@@ -645,8 +689,18 @@
         const date = document.getElementById("edit-date-" + id).value;
         const amt = Number(document.getElementById("edit-amt-" + id).value);
         const memo = document.getElementById("edit-memo-" + id).value;
-        if (!amt || amt <= 0) return;
+        if (Number.isNaN(amt) || amt < 0) return;
         editTransaction(id, date, amt, memo);
+      };
+    });
+    document.querySelectorAll(".lg-tx-edit-input").forEach((el) => {
+      el.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.stopPropagation();
+          const id = el.getAttribute("data-tx");
+          const btn = document.querySelector('[data-savetx="' + id + '"]');
+          if (btn) btn.click();
+        }
       };
     });
     document.querySelectorAll("[data-del]").forEach((el) => {
@@ -667,6 +721,8 @@
     const ok = addItem(nameEl.value, Number(balEl.value) || 0);
     if (ok) { nameEl.value = ""; balEl.value = ""; render(); }
   };
+  document.getElementById("newItemName").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("addItemBtn").click(); });
+  document.getElementById("newItemBalance").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("addItemBtn").click(); });
 
   document.getElementById("saveBtn").onclick = () => saveState();
 
@@ -692,6 +748,29 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => {}); });
   }
+
+  // ===================== 뒤로가기 시 종료 확인 =====================
+  let exitGuardActive = true;
+  function armExitGuard() {
+    history.pushState({ lgExitGuard: true }, "", location.href);
+  }
+  armExitGuard();
+
+  window.addEventListener("popstate", () => {
+    if (exitGuardActive) {
+      armExitGuard();
+      document.getElementById("exitConfirmOverlay").classList.add("show");
+    }
+  });
+
+  document.getElementById("exitNoBtn").onclick = () => {
+    document.getElementById("exitConfirmOverlay").classList.remove("show");
+  };
+  document.getElementById("exitYesBtn").onclick = () => {
+    exitGuardActive = false;
+    document.getElementById("exitConfirmOverlay").classList.remove("show");
+    history.back();
+  };
 
   renderAccountPanel();
   render();
