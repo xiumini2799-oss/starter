@@ -87,7 +87,12 @@
   .lg-manage-body.show { display: block; }
   .lg-manage-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--paper-line); font-size: 13px; }
   .lg-manage-row .lg-item-dot { margin-right: 6px; }
+  .lg-manage-row-btns { display: flex; gap: 10px; }
+  .lg-manage-edit { background: none; border: none; color: var(--stamp); font-size: 12px; cursor: pointer; text-decoration: underline; }
   .lg-manage-del { background: none; border: none; color: var(--red-ink); font-size: 12px; cursor: pointer; text-decoration: underline; }
+  .lg-manage-row-edit { gap: 6px; }
+  .lg-manage-rename-input { flex: 1; padding: 6px 8px; border: 1px solid var(--ink); font-size: 13px; font-family: inherit; }
+  .lg-manage-save { border: none; background: var(--ink); color: var(--paper); font-size: 12px; padding: 6px 10px; cursor: pointer; }
   .lg-add-item-row { display: flex; gap: 6px; margin-top: 10px; }
   .lg-add-item-row input { padding: 7px 9px; border: 1px solid var(--paper-line); font-size: 13px; }
   .lg-add-item-row input.lg-item-name-input { flex: 1.4; }
@@ -469,6 +474,7 @@
   let state = { items: [], transactions: [] };
   let openItem = null;
   let editingTxId = null;
+  let editingItemName = null;
   let activeTab = "items";
 
   function saveLocal() {
@@ -556,6 +562,19 @@
     render();
   }
 
+  function renameItem(oldName, newName) {
+    newName = newName.trim();
+    if (!newName || newName === oldName) return false;
+    if (getItem(newName)) return false;
+    const it = getItem(oldName);
+    if (!it) return false;
+    it.name = newName;
+    state.transactions.forEach((t) => { if (t.item === oldName) t.item = newName; });
+    if (openItem === oldName) openItem = newName;
+    saveState();
+    return true;
+  }
+
   function handleQuickAdd() {
     const input = document.getElementById("quickInput");
     const errBox = document.getElementById("quickError");
@@ -604,10 +623,20 @@
     totalEl.className = "lg-total-value" + (total < 0 ? " negative" : "");
 
     const manageListEl = document.getElementById("manageList");
-    manageListEl.innerHTML = state.items.map((it) =>
-      '<div class="lg-manage-row"><span><span class="lg-item-dot" style="display:inline-block;background:' + it.color + '"></span>' + esc(it.name) + '</span>' +
-      '<button class="lg-manage-del" data-remove="' + esc(it.name) + '">삭제</button></div>'
-    ).join("") || '<div class="lg-empty-tx">항목이 아직 없어요. 아래에서 추가해보세요.</div>';
+    manageListEl.innerHTML = state.items.map((it) => {
+      if (editingItemName === it.name) {
+        return '<div class="lg-manage-row lg-manage-row-edit">' +
+          '<input type="text" class="lg-manage-rename-input" id="rename-' + esc(it.name) + '" value="' + esc(it.name) + '" maxlength="20" />' +
+          '<button class="lg-manage-save" data-saverename="' + esc(it.name) + '">저장</button>' +
+          '<button class="lg-manage-del" data-cancelrename="' + esc(it.name) + '">취소</button>' +
+        '</div>';
+      }
+      return '<div class="lg-manage-row"><span><span class="lg-item-dot" style="display:inline-block;background:' + it.color + '"></span>' + esc(it.name) + '</span>' +
+        '<span class="lg-manage-row-btns">' +
+          '<button class="lg-manage-edit" data-editname="' + esc(it.name) + '">수정</button>' +
+          '<button class="lg-manage-del" data-remove="' + esc(it.name) + '">삭제</button>' +
+        '</span></div>';
+    }).join("") || '<div class="lg-empty-tx">항목이 아직 없어요. 아래에서 추가해보세요.</div>';
 
     const listEl = document.getElementById("itemList");
     if (state.items.length === 0) {
@@ -729,6 +758,31 @@
     });
     document.querySelectorAll("[data-remove]").forEach((el) => {
       el.onclick = () => { if (confirm(el.getAttribute("data-remove") + " 항목을 삭제할까요? 관련 거래 내역도 함께 삭제돼요.")) removeItem(el.getAttribute("data-remove")); };
+    });
+    document.querySelectorAll("[data-editname]").forEach((el) => {
+      el.onclick = () => { editingItemName = el.getAttribute("data-editname"); render(); };
+    });
+    document.querySelectorAll("[data-cancelrename]").forEach((el) => {
+      el.onclick = () => { editingItemName = null; render(); };
+    });
+    document.querySelectorAll("[data-saverename]").forEach((el) => {
+      el.onclick = () => {
+        const oldName = el.getAttribute("data-saverename");
+        const input = document.getElementById("rename-" + oldName);
+        if (renameItem(oldName, input.value)) {
+          editingItemName = null;
+          render();
+        }
+      };
+    });
+    document.querySelectorAll(".lg-manage-rename-input").forEach((el) => {
+      el.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          const oldName = el.id.replace("rename-", "");
+          const btn = document.querySelector('[data-saverename="' + oldName + '"]');
+          if (btn) btn.click();
+        }
+      };
     });
   }
 
