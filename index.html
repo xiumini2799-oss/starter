@@ -171,7 +171,7 @@
   .lg-exit-msg { font-size: 15px; color: var(--ink); margin-bottom: 18px; }
   .lg-exit-btns { display: flex; gap: 10px; }
   .lg-exit-yes { flex: 1; padding: 10px; border: 1px solid var(--paper-line); background: #fff; color: var(--ink-soft); font-size: 13px; cursor: pointer; }
-  .lg-exit-no { flex: 1; padding: 10px; border: none; background: var(--stamp); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .lg-exit-no { flex: 1; padding: 10px; border: none; background: #A99569; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -364,7 +364,7 @@
   }
   function revealAppScreen() { pendingAuthDecision = "app"; tryRevealFromSplash(); }
   function revealLoginScreen() { pendingAuthDecision = "login"; tryRevealFromSplash(); }
-  setTimeout(() => { splashElapsed = true; tryRevealFromSplash(); }, 3000);
+  setTimeout(() => { splashElapsed = true; tryRevealFromSplash(); }, 2000);
 
   function setSyncNote(text) {
     const el = document.getElementById("syncNote");
@@ -770,6 +770,11 @@
     exitGuardActive = false;
     document.getElementById("exitConfirmOverlay").classList.remove("show");
     history.back();
+    setTimeout(() => {
+      // 앱이 실제로 종료되지 않고 그대로 남아있는 경우를 대비해 안전장치를 다시 걸어둠
+      exitGuardActive = true;
+      armExitGuard();
+    }, 800);
   };
 
   renderAccountPanel();
