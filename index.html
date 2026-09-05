@@ -443,7 +443,7 @@
   document.addEventListener("click", (e) => {
     const panel = document.getElementById("accountPanel");
     const btn = document.getElementById("accountBtn");
-    if (panel.classList.contains("show") && !panel.contains(e.target) && e.target !== btn) panel.classList.remove("show");
+    if (panel.classList.contains("show") && !panel.contains(e.target) && !btn.contains(e.target)) panel.classList.remove("show");
   });
 
   // ===================== 가계부 앱 로직 =====================
