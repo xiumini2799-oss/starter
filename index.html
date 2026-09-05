@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>가계부</title>
+<meta name="theme-color" content="#1F2A44" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="가계부" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="icon" href="./icon-192.png" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+  :root {
+    --paper: #F7F4EC;
+    --paper-line: #E2DAC4;
+    --ink: #1F2A44;
+    --ink-soft: #6B7280;
+    --red-ink: #A8342F;
+    --green-ink: #2F6B4F;
+    --stamp: #C08A2E;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', -apple-system, 'Malgun Gothic', sans-serif;
+    min-height: 100%;
+  }
+  body {
+    background-image: repeating-linear-gradient(
+      to bottom, transparent, transparent 27px,
+      var(--paper-line) 27px, var(--paper-line) 28px
+    );
+    padding: 20px 16px 48px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  h1, h2 { margin: 0; }
+
+  .lg-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--ink);
+  }
+  .lg-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
+
+  .lg-total-panel {
+    border: 1px solid var(--ink); background: rgba(247,244,236,0.6);
+    padding: 16px; margin-bottom: 18px; text-align: center;
+  }
+  .lg-total-label { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
+  .lg-total-value { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 26px; }
+  .lg-total-value.negative { color: var(--red-ink); }
+
+  .lg-quick-panel { margin-bottom: 16px; }
+  .lg-quick-row { display: flex; gap: 8px; }
+  .lg-quick-input {
+    flex: 1; padding: 10px 11px; border: 1px solid var(--ink); background: #fff;
+    font-size: 14px; font-family: inherit; color: var(--ink);
+  }
+  .lg-quick-btn {
+    padding: 10px 16px; border: none; background: var(--stamp); color: #fff;
+    font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  .lg-quick-hint { font-size: 11px; color: var(--ink-soft); margin-top: 5px; }
+
+  .lg-item-card { border: 1px solid var(--ink); margin-bottom: 10px; background: rgba(247,244,236,0.5); }
+  .lg-item-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; cursor: pointer; }
+  .lg-item-name-row { display: flex; align-items: center; gap: 8px; }
+  .lg-item-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .lg-item-name { font-weight: 700; font-size: 14px; }
+  .lg-item-balance { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 16px; }
+  .lg-item-balance.negative { color: var(--red-ink); }
+  .lg-item-body { padding: 0 14px 14px; border-top: 1px solid var(--paper-line); display: none; }
+  .lg-item-card.open .lg-item-body { display: block; }
+
+  .lg-balance-set { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 12px; color: var(--ink-soft); }
+  .lg-link-btn { background: none; border: none; color: var(--stamp); font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; }
+  .lg-balance-edit { display: none; gap: 6px; margin: 10px 0; }
+  .lg-balance-edit.show { display: flex; }
+  .lg-balance-edit input { flex: 1; padding: 7px 9px; border: 1px solid var(--ink); font-size: 13px; }
+  .lg-balance-edit button { padding: 7px 12px; border: none; background: var(--ink); color: var(--paper); font-size: 12px; cursor: pointer; }
+
+  .lg-tx-form { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 14px; }
+  .lg-type-switch { display: flex; border: 1px solid var(--ink); }
+  .lg-type-btn { flex: 1; padding: 7px; background: transparent; border: none; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink-soft); }
+  .lg-type-btn.active.out { background: var(--red-ink); color: var(--paper); }
+  .lg-type-btn.active.in { background: var(--green-ink); color: var(--paper); }
+  .lg-tx-form input { padding: 8px 9px; border: 1px solid var(--paper-line); background: #fff; font-size: 13px; font-family: inherit; color: var(--ink); }
+  .lg-tx-form .lg-row { display: flex; gap: 8px; }
+  .lg-tx-form .lg-row input { flex: 1; }
+  .lg-tx-submit { padding: 9px; border: none; background: var(--stamp); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+  .lg-history-label { font-size: 12px; color: var(--ink-soft); font-weight: 700; margin-bottom: 6px; }
+  .lg-tx-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--paper-line); font-size: 13px; gap: 8px; }
+  .lg-tx-left { display: flex; flex-direction: column; min-width: 0; }
+  .lg-tx-date { font-size: 11px; color: var(--ink-soft); }
+  .lg-tx-memo { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lg-tx-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .lg-tx-amount { font-weight: 700; }
+  .lg-tx-amount.in { color: var(--green-ink); }
+  .lg-tx-amount.out { color: var(--red-ink); }
+  .lg-tx-amount.adjust { color: var(--ink-soft); }
+  .lg-delete { background: none; border: none; color: var(--ink-soft); font-size: 15px; cursor: pointer; padding: 2px 4px; line-height: 1; }
+  .lg-empty-tx { font-size: 12px; color: var(--ink-soft); padding: 8px 0; }
+
+  .lg-panel { border: 1px solid var(--ink); background: rgba(247,244,236,0.6); padding: 14px 16px; margin-bottom: 16px; }
+  .lg-section-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 15px; margin-bottom: 10px; }
+  .lg-summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .lg-stamp { text-align: center; padding: 6px 2px; }
+  .lg-stamp-label { font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+  .lg-stamp-value { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 15px; word-break: keep-all; }
+  .lg-stamp-value.income { color: var(--green-ink); }
+  .lg-stamp-value.expense { color: var(--red-ink); }
+  .lg-empty { text-align: center; padding: 20px 12px; color: var(--ink-soft); font-size: 13px; border: 1px dashed var(--paper-line); }
+
+  .lg-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .lg-table th { text-align: left; font-weight: 700; color: var(--ink-soft); border-bottom: 1px solid var(--ink); padding: 6px 4px; font-size: 11px; }
+  .lg-table td { padding: 7px 4px; border-bottom: 1px solid var(--paper-line); vertical-align: middle; }
+  .lg-table-tag { color: #fff; font-size: 10px; padding: 2px 6px; white-space: nowrap; }
+  .lg-table-amount { font-weight: 700; white-space: nowrap; }
+  .lg-table-amount.in { color: var(--green-ink); }
+  .lg-table-amount.out { color: var(--red-ink); }
+  .lg-table-memo { color: var(--ink-soft); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .lg-footer { margin-top: 20px; text-align: center; }
+  .lg-reset-btn { background: none; border: 1px solid var(--paper-line); color: var(--ink-soft); font-size: 12px; padding: 6px 12px; cursor: pointer; }
+  .lg-confirm-box { font-size: 12px; color: var(--ink-soft); display: none; }
+  .lg-confirm-box.show { display: block; }
+  .lg-confirm-box button { margin-left: 8px; border: none; background: var(--red-ink); color: #fff; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .lg-confirm-box button.cancel { background: var(--ink-soft); }
+  .lg-error { font-size: 12px; color: var(--red-ink); text-align: center; margin-top: 8px; }
+
+  .lg-install-banner {
+    display: none; border: 1px solid var(--stamp); background: #fff8ea;
+    padding: 10px 12px; font-size: 12px; color: var(--ink); margin-bottom: 16px;
+    align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .lg-install-banner.show { display: flex; }
+  .lg-install-banner button { border: none; background: var(--stamp); color: #fff; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="lg-header"><div class="lg-title">가계부</div></div>
+
+  <div id="installBanner" class="lg-install-banner">
+    <span>홈 화면에 앱으로 추가할 수 있어요</span>
+    <button id="installBtn">추가</button>
+  </div>
+
+  <div class="lg-total-panel">
+    <div class="lg-total-label">전체 잔액</div>
+    <div id="totalValue" class="lg-total-value">0원</div>
+  </div>
+
+  <div class="lg-quick-panel">
+    <div class="lg-quick-row">
+      <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: 용돈 -3200 커피" />
+      <button id="quickBtn" class="lg-quick-btn">추가</button>
+    </div>
+    <div class="lg-quick-hint">항목 금액 [메모] · 금액에 -/+ 로 출금/입금 구분</div>
+    <div id="quickError" class="lg-error" style="display:none;"></div>
+  </div>
+
+  <div id="itemList"></div>
+
+  <div class="lg-panel">
+    <div class="lg-section-title">전체 내역</div>
+    <div class="lg-summary-grid">
+      <div class="lg-stamp">
+        <div class="lg-stamp-label">총 입금</div>
+        <div id="totalIn" class="lg-stamp-value income">0원</div>
+      </div>
+      <div class="lg-stamp">
+        <div class="lg-stamp-label">총 출금</div>
+        <div id="totalOut" class="lg-stamp-value expense">0원</div>
+      </div>
+      <div class="lg-stamp">
+        <div class="lg-stamp-label">순변동</div>
+        <div id="netChange" class="lg-stamp-value">0원</div>
+      </div>
+    </div>
+    <div id="allHistory"></div>
+  </div>
+
+  <div class="lg-footer">
+    <div id="confirmBox" class="lg-confirm-box">
+      정말 모든 기록과 잔액을 초기값으로 되돌릴까요?
+      <button id="confirmResetBtn">초기화</button>
+      <button id="cancelResetBtn" class="cancel">취소</button>
+    </div>
+    <button id="resetBtn" class="lg-reset-btn">전체 초기화</button>
+  </div>
+
+<script>
+  const ITEMS = ["용돈", "비상금", "통신비", "교통비", "경조사비", "저축"];
+  const ITEM_COLORS = {
+    "용돈": "#C08A2E", "비상금": "#2F6B4F", "통신비": "#3A4E8C",
+    "교통비": "#52616B", "경조사비": "#6B4E71", "저축": "#2E7D82",
+  };
+  const DEFAULT_BALANCES = {
+    "용돈": -57558, "비상금": 1660680, "통신비": 2231,
+    "교통비": 6760, "경조사비": 113200, "저축": 30000,
+  };
+  const STORAGE_KEY = "household-ledger-v1";
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          balances: Object.assign({}, DEFAULT_BALANCES, parsed.balances || {}),
+          transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+        };
+      }
+    } catch (e) {}
+    return { balances: Object.assign({}, DEFAULT_BALANCES), transactions: [] };
+  }
+
+  let state = loadState();
+  let openItem = null;
+  let editingBalanceItem = null;
+  let txDraftType = {};
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error("저장 실패", e);
+    }
+  }
+
+  function makeId() {
+    return (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2));
+  }
+  function todayISO() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function formatWon(n) {
+    const sign = n < 0 ? "-" : "";
+    return sign + Math.abs(Math.round(n)).toLocaleString("ko-KR") + "원";
+  }
+  function formatDateLabel(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    const weekdays = ["일","월","화","수","목","금","토"];
+    return (d.getMonth()+1) + "." + d.getDate() + " (" + weekdays[d.getDay()] + ")";
+  }
+  function esc(s) {
+    const div = document.createElement("div");
+    div.textContent = s == null ? "" : s;
+    return div.innerHTML;
+  }
+
+  function addTransaction(item, type, amount, memo, date) {
+    const delta = type === "in" ? amount : -amount;
+    state.balances[item] = (state.balances[item] || 0) + delta;
+    state.transactions.push({
+      id: makeId(), item, type, amount,
+      memo: (memo || "").trim(), date: date || todayISO(), createdAt: Date.now(),
+    });
+    saveState();
+    render();
+  }
+
+  function deleteTransaction(id) {
+    const t = state.transactions.find((x) => x.id === id);
+    if (!t) return;
+    const revertDelta = t.type === "in" ? -t.amount : t.type === "out" ? t.amount : -t.amount;
+    state.balances[t.item] = (state.balances[t.item] || 0) + revertDelta;
+    state.transactions = state.transactions.filter((x) => x.id !== id);
+    saveState();
+    render();
+  }
+
+  function setBalance(item, val) {
+    const prev = state.balances[item] || 0;
+    state.balances[item] = val;
+    state.transactions.push({
+      id: makeId(), item, type: "adjust", amount: val - prev,
+      memo: "잔액 직접 설정", date: todayISO(), createdAt: Date.now(),
+    });
+    saveState();
+    editingBalanceItem = null;
+    render();
+  }
+
+  function resetAll() {
+    state = { balances: Object.assign({}, DEFAULT_BALANCES), transactions: [] };
+    saveState();
+    openItem = null;
+    render();
+  }
+
+  function handleQuickAdd() {
+    const input = document.getElementById("quickInput");
+    const errBox = document.getElementById("quickError");
+    const raw = input.value.trim();
+    errBox.style.display = "none";
+    if (!raw) return;
+    const tokens = raw.split(/\s+/);
+    if (tokens.length < 2) {
+      errBox.textContent = "형식: 항목 금액 [메모] (예: 용돈 -3200 커피)";
+      errBox.style.display = "block";
+      return;
+    }
+    const item = tokens[0];
+    if (!ITEMS.includes(item)) {
+      errBox.textContent = "항목은 " + ITEMS.join("/") + " 중 하나로 입력해주세요";
+      errBox.style.display = "block";
+      return;
+    }
+    const m = tokens[1].match(/^([+-]?)(\d+)$/);
+    if (!m) {
+      errBox.textContent = "금액은 숫자로 입력해주세요 (예: -3200, +9)";
+      errBox.style.display = "block";
+      return;
+    }
+    const type = m[1] === "+" ? "in" : "out";
+    const amount = Number(m[2]);
+    const memo = tokens.slice(2).join(" ");
+    addTransaction(item, type, amount, memo, todayISO());
+    input.value = "";
+  }
+
+  function render() {
+    const total = ITEMS.reduce((s, it) => s + (state.balances[it] || 0), 0);
+    const totalEl = document.getElementById("totalValue");
+    totalEl.textContent = formatWon(total);
+    totalEl.className = "lg-total-value" + (total < 0 ? " negative" : "");
+
+    const listEl = document.getElementById("itemList");
+    listEl.innerHTML = ITEMS.map((item) => {
+      const bal = state.balances[item] || 0;
+      const isOpen = openItem === item;
+      const history = state.transactions
+        .filter((t) => t.item === item)
+        .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
+      const curType = txDraftType[item] || "out";
+
+      const historyHtml = history.length === 0
+        ? '<div class="lg-empty-tx">아직 기록이 없어요.</div>'
+        : history.map((t) => {
+            const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
+            return '<div class="lg-tx-item">' +
+              '<div class="lg-tx-left"><span class="lg-tx-date">' + formatDateLabel(t.date) + '</span>' +
+              (t.memo ? '<span class="lg-tx-memo">' + esc(t.memo) + '</span>' : '') + '</div>' +
+              '<div class="lg-tx-right"><span class="lg-tx-amount ' + t.type + '">' +
+              (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</span>' +
+              '<button class="lg-delete" data-del="' + t.id + '">×</button></div></div>';
+          }).join("");
+
+      return '<div class="lg-item-card' + (isOpen ? ' open' : '') + '" data-item="' + item + '">' +
+        '<div class="lg-item-head" data-toggle="' + item + '">' +
+          '<div class="lg-item-name-row"><span class="lg-item-dot" style="background:' + ITEM_COLORS[item] + '"></span>' +
+          '<span class="lg-item-name">' + item + '</span></div>' +
+          '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
+        '</div>' +
+        '<div class="lg-item-body">' +
+          (editingBalanceItem === item
+            ? '<div class="lg-balance-edit show"><input type="number" id="balEdit-' + item + '" value="' + bal + '" />' +
+              '<button data-savebal="' + item + '">저장</button></div>'
+            : '<div class="lg-balance-set"><button class="lg-link-btn" data-editbal="' + item + '">잔액 직접 설정</button></div>') +
+          '<div class="lg-tx-form">' +
+            '<div class="lg-type-switch">' +
+              '<button type="button" class="lg-type-btn out' + (curType === "out" ? " active out" : "") + '" data-settype="' + item + '" data-type="out">출금</button>' +
+              '<button type="button" class="lg-type-btn in' + (curType === "in" ? " active in" : "") + '" data-settype="' + item + '" data-type="in">입금</button>' +
+            '</div>' +
+            '<input type="number" inputmode="numeric" min="0" placeholder="금액" id="amt-' + item + '" />' +
+            '<div class="lg-row">' +
+              '<input type="text" placeholder="메모 (선택)" id="memo-' + item + '" />' +
+              '<input type="date" id="date-' + item + '" value="' + todayISO() + '" />' +
+            '</div>' +
+            '<button type="button" class="lg-tx-submit" data-submit="' + item + '">기록하기</button>' +
+          '</div>' +
+          '<div class="lg-history-label">거래 내역</div>' +
+          historyHtml +
+        '</div>' +
+      '</div>';
+    }).join("");
+
+    const all = [...state.transactions].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
+    const totalIn = all.filter((t) => t.type === "in").reduce((s, t) => s + t.amount, 0);
+    const totalOut = all.filter((t) => t.type === "out").reduce((s, t) => s + t.amount, 0);
+    document.getElementById("totalIn").textContent = formatWon(totalIn);
+    document.getElementById("totalOut").textContent = formatWon(totalOut);
+    const netEl = document.getElementById("netChange");
+    netEl.textContent = formatWon(totalIn - totalOut);
+    netEl.className = "lg-stamp-value " + (totalIn - totalOut < 0 ? "expense" : "income");
+
+    const histEl = document.getElementById("allHistory");
+    if (all.length === 0) {
+      histEl.innerHTML = '<div class="lg-empty">아직 기록이 없어요.</div>';
+    } else {
+      histEl.innerHTML = '<table class="lg-table"><thead><tr><th>날짜</th><th>항목</th><th>구분</th><th>금액</th><th>메모</th></tr></thead><tbody>' +
+        all.map((t) => {
+          const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
+          const typeLabel = t.type === "in" ? "입금" : t.type === "out" ? "출금" : "설정";
+          return '<tr><td>' + formatDateLabel(t.date) + '</td>' +
+            '<td><span class="lg-table-tag" style="background:' + ITEM_COLORS[t.item] + '">' + t.item + '</span></td>' +
+            '<td>' + typeLabel + '</td>' +
+            '<td class="lg-table-amount ' + (isPos ? "in" : "out") + '">' + (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</td>' +
+            '<td class="lg-table-memo">' + esc(t.memo) + '</td></tr>';
+        }).join("") + '</tbody></table>';
+    }
+
+    attachEvents();
+  }
+
+  function attachEvents() {
+    document.querySelectorAll("[data-toggle]").forEach((el) => {
+      el.onclick = () => {
+        const item = el.getAttribute("data-toggle");
+        openItem = openItem === item ? null : item;
+        editingBalanceItem = null;
+        render();
+      };
+    });
+    document.querySelectorAll("[data-editbal]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        editingBalanceItem = el.getAttribute("data-editbal");
+        render();
+      };
+    });
+    document.querySelectorAll("[data-savebal]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-savebal");
+        const input = document.getElementById("balEdit-" + item);
+        const val = Number(input.value);
+        if (!Number.isNaN(val)) setBalance(item, val);
+      };
+    });
+    document.querySelectorAll("[data-settype]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-settype");
+        txDraftType[item] = el.getAttribute("data-type");
+        render();
+        openItem = item;
+      };
+    });
+    document.querySelectorAll("[data-submit]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-submit");
+        const amt = Number(document.getElementById("amt-" + item).value);
+        if (!amt || amt <= 0) return;
+        const memo = document.getElementById("memo-" + item).value;
+        const date = document.getElementById("date-" + item).value;
+        const type = txDraftType[item] || "out";
+        addTransaction(item, type, amt, memo, date);
+        txDraftType[item] = "out";
+        openItem = item;
+      };
+    });
+    document.querySelectorAll("[data-del]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        deleteTransaction(el.getAttribute("data-del"));
+      };
+    });
+  }
+
+  document.getElementById("quickBtn").onclick = handleQuickAdd;
+  document.getElementById("quickInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleQuickAdd();
+  });
+
+  document.getElementById("resetBtn").onclick = () => {
+    document.getElementById("confirmBox").classList.add("show");
+  };
+  document.getElementById("confirmResetBtn").onclick = () => {
+    resetAll();
+    document.getElementById("confirmBox").classList.remove("show");
+  };
+  document.getElementById("cancelResetBtn").onclick = () => {
+    document.getElementById("confirmBox").classList.remove("show");
+  };
+
+  // PWA install prompt
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById("installBanner").classList.add("show");
+  });
+  document.getElementById("installBtn").onclick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById("installBanner").classList.remove("show");
+  };
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>
