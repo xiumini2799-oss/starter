@@ -37,7 +37,7 @@
     background: #fff; color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 16px;
   }
   .login-guest-link { background: none; border: none; color: var(--ink-soft); font-size: 12px; text-decoration: underline; cursor: pointer; }
-  .login-error { font-size: 12px; color: var(--red-ink); margin-top: 14px; max-width: 280px; }
+  .login-error { font-size: 14px; color: var(--red-ink); margin-top: 14px; max-width: 280px; }
 
   /* ---------- 헤더 / 계정 ---------- */
   .lg-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); position: relative; }
@@ -79,6 +79,7 @@
   .lg-quick-input { flex: 1; padding: 10px 11px; border: 1px solid var(--ink); background: #fff; font-size: 14px; font-family: inherit; color: var(--ink); }
   .lg-quick-btn { padding: 10px 16px; border: none; background: var(--stamp); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; }
   .lg-quick-hint { font-size: 11px; color: var(--ink-soft); margin-top: 5px; }
+  .lg-error { font-size: 14px; color: var(--red-ink); margin-top: 6px; }
 
   .lg-items-manage { margin-bottom: 16px; }
   .lg-manage-toggle { width: 100%; padding: 9px; background: #fff; border: 1px solid var(--paper-line); color: var(--ink-soft); font-size: 12px; cursor: pointer; }
@@ -103,12 +104,13 @@
   .lg-item-body { padding: 0 14px 14px; border-top: 1px solid var(--paper-line); display: none; }
   .lg-item-card.open .lg-item-body { display: block; }
 
-  .lg-balance-set { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 12px; color: var(--ink-soft); }
-  .lg-link-btn { background: none; border: none; color: var(--stamp); font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; }
-  .lg-balance-edit { display: none; gap: 6px; margin: 10px 0; }
-  .lg-balance-edit.show { display: flex; }
-  .lg-balance-edit input { flex: 1; padding: 7px 9px; border: 1px solid var(--ink); font-size: 13px; }
-  .lg-balance-edit button { padding: 7px 12px; border: none; background: var(--ink); color: var(--paper); font-size: 12px; cursor: pointer; }
+  .lg-edit-tx { background: none; border: none; color: var(--stamp); font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0 2px; }
+  .lg-tx-edit-row { flex-direction: column; align-items: stretch; gap: 6px; }
+  .lg-tx-edit-fields { display: flex; gap: 6px; }
+  .lg-tx-edit-fields input { flex: 1; padding: 6px 7px; border: 1px solid var(--ink); font-size: 12px; font-family: inherit; min-width: 0; }
+  .lg-tx-edit-btns { display: flex; gap: 6px; }
+  .lg-tx-edit-btns button { flex: 1; padding: 6px; border: none; background: var(--ink); color: var(--paper); font-size: 12px; cursor: pointer; }
+  .lg-tx-edit-btns button.cancel { background: var(--ink-soft); }
 
   .lg-tx-form { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 14px; }
   .lg-type-switch { display: flex; border: 1px solid var(--ink); }
@@ -166,7 +168,6 @@
   <!-- 로그인 화면 -->
   <div id="loginScreen">
     <div class="login-title">가계부</div>
-    <div class="login-sub">구글 계정으로 로그인하면 여러 기기에서<br/>같은 가계부를 이어서 볼 수 있어요</div>
     <button class="login-google-btn" id="loginBtnMain">구글로 로그인</button>
     <button class="login-guest-link" id="guestBtn">로그인 없이 이 기기에서만 사용하기</button>
     <div id="loginError" class="login-error"></div>
@@ -210,10 +211,9 @@
     <div class="lg-tab-panel active" id="tabPanelItems">
       <div class="lg-quick-panel">
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: @@ +100 커피 (없는 항목은 자동 생성)" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: 비상금 +1000" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
-        <div class="lg-quick-hint">항목 금액 [메모] · -는 출금, +는 입금 · 없는 항목명이면 자동으로 새 항목이 생겨요</div>
         <div id="quickError" class="lg-error" style="display:none;"></div>
       </div>
 
@@ -395,7 +395,7 @@
 
   let state = loadLocal();
   let openItem = null;
-  let editingBalanceItem = null;
+  let editingTxId = null;
   let txDraftType = {};
   let activeTab = "items";
   let lastTxId = null;
@@ -444,7 +444,7 @@
 
   function addTransaction(item, type, amount, memo, date) {
     ensureItem(item);
-    const tx = { id: makeId(), item, type, amount, memo: (memo || "").trim(), date: date || todayISO(), createdAt: Date.now() };
+    const tx = { id: makeId(), item, type, amount, memo: (memo || "").trim().slice(0, 20), date: date || todayISO(), createdAt: Date.now() };
     state.transactions.push(tx);
     lastTxId = tx.id;
     saveState();
@@ -464,13 +464,14 @@
     deleteTransaction(sorted[0].id);
   }
 
-  function setBalance(item, val) {
-    const prev = currentBalance(item);
-    const tx = { id: makeId(), item, type: "adjust", amount: val - prev, memo: "잔액 직접 설정", date: todayISO(), createdAt: Date.now() };
-    state.transactions.push(tx);
-    lastTxId = tx.id;
+  function editTransaction(id, newDate, newAmount, newMemo) {
+    const tx = state.transactions.find((t) => t.id === id);
+    if (!tx) return;
+    tx.date = newDate || tx.date;
+    tx.amount = newAmount;
+    tx.memo = (newMemo || "").trim().slice(0, 20);
     saveState();
-    editingBalanceItem = null;
+    editingTxId = null;
     render();
   }
 
@@ -572,11 +573,25 @@
           : groups.map((g) => {
               const txHtml = g.txs.map((t) => {
                 const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
+                if (editingTxId === t.id) {
+                  return '<div class="lg-tx-item lg-tx-edit-row">' +
+                    '<div class="lg-tx-edit-fields">' +
+                      '<input type="date" id="edit-date-' + t.id + '" value="' + t.date + '" />' +
+                      '<input type="number" inputmode="numeric" min="0" id="edit-amt-' + t.id + '" value="' + Math.abs(t.amount) + '" />' +
+                      '<input type="text" maxlength="20" placeholder="메모" id="edit-memo-' + t.id + '" value="' + esc(t.memo) + '" />' +
+                    '</div>' +
+                    '<div class="lg-tx-edit-btns">' +
+                      '<button data-savetx="' + t.id + '">저장</button>' +
+                      '<button class="cancel" data-canceltx="' + t.id + '">취소</button>' +
+                    '</div>' +
+                  '</div>';
+                }
                 return '<div class="lg-tx-item">' +
                   '<div class="lg-tx-left"><span class="lg-tx-date">' + formatDateLabel(t.date) + '</span>' +
                   (t.memo ? '<span class="lg-tx-memo">' + esc(t.memo) + '</span>' : '') + '</div>' +
                   '<div class="lg-tx-right"><span class="lg-tx-amount ' + t.type + '">' +
                   (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</span>' +
+                  '<button class="lg-edit-tx" data-edittx="' + t.id + '">수정</button>' +
                   '<button class="lg-delete" data-del="' + t.id + '">×</button></div></div>';
               }).join("");
               return '<div class="lg-month-group"><div class="lg-month-header">' + formatMonthLabel(g.month) +
@@ -590,10 +605,6 @@
             '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
           '</div>' +
           '<div class="lg-item-body">' +
-            (editingBalanceItem === item
-              ? '<div class="lg-balance-edit show"><input type="number" id="balEdit-' + esc(item) + '" value="' + bal + '" />' +
-                '<button data-savebal="' + esc(item) + '">저장</button></div>'
-              : '<div class="lg-balance-set"><button class="lg-link-btn" data-editbal="' + esc(item) + '">잔액 직접 설정</button></div>') +
             '<div class="lg-tx-form">' +
               '<div class="lg-type-switch">' +
                 '<button type="button" class="lg-type-btn out' + (curType === "out" ? " active out" : "") + '" data-settype="' + esc(item) + '" data-type="out">출금</button>' +
@@ -601,7 +612,7 @@
               '</div>' +
               '<input type="number" inputmode="numeric" min="0" placeholder="금액" id="amt-' + esc(item) + '" />' +
               '<div class="lg-row">' +
-                '<input type="text" placeholder="메모 (선택)" id="memo-' + esc(item) + '" />' +
+                '<input type="text" placeholder="메모 (선택)" maxlength="20" id="memo-' + esc(item) + '" />' +
                 '<input type="date" id="date-' + esc(item) + '" value="' + todayISO() + '" />' +
               '</div>' +
               '<div class="lg-tx-btn-row">' +
@@ -648,13 +659,24 @@
 
   function attachEvents() {
     document.querySelectorAll("[data-toggle]").forEach((el) => {
-      el.onclick = () => { const item = el.getAttribute("data-toggle"); openItem = openItem === item ? null : item; editingBalanceItem = null; render(); };
+      el.onclick = () => { const item = el.getAttribute("data-toggle"); openItem = openItem === item ? null : item; editingTxId = null; render(); };
     });
-    document.querySelectorAll("[data-editbal]").forEach((el) => {
-      el.onclick = (e) => { e.stopPropagation(); editingBalanceItem = el.getAttribute("data-editbal"); render(); };
+    document.querySelectorAll("[data-edittx]").forEach((el) => {
+      el.onclick = (e) => { e.stopPropagation(); editingTxId = el.getAttribute("data-edittx"); render(); };
     });
-    document.querySelectorAll("[data-savebal]").forEach((el) => {
-      el.onclick = (e) => { e.stopPropagation(); const item = el.getAttribute("data-savebal"); const input = document.getElementById("balEdit-" + item); const val = Number(input.value); if (!Number.isNaN(val)) setBalance(item, val); };
+    document.querySelectorAll("[data-canceltx]").forEach((el) => {
+      el.onclick = (e) => { e.stopPropagation(); editingTxId = null; render(); };
+    });
+    document.querySelectorAll("[data-savetx]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const id = el.getAttribute("data-savetx");
+        const date = document.getElementById("edit-date-" + id).value;
+        const amt = Number(document.getElementById("edit-amt-" + id).value);
+        const memo = document.getElementById("edit-memo-" + id).value;
+        if (!amt || amt <= 0) return;
+        editTransaction(id, date, amt, memo);
+      };
     });
     document.querySelectorAll("[data-settype]").forEach((el) => {
       el.onclick = (e) => { e.stopPropagation(); const item = el.getAttribute("data-settype"); txDraftType[item] = el.getAttribute("data-type"); openItem = item; render(); };
