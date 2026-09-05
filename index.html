@@ -59,7 +59,7 @@
   /* ---------- 상단 액션(저장/실행취소) ---------- */
   .lg-action-row { display: flex; gap: 8px; margin-bottom: 16px; }
   .lg-save-btn { flex: 2; padding: 12px; border: none; background: var(--ink); color: var(--paper); font-weight: 700; font-size: 14px; cursor: pointer; }
-  .lg-undo-btn { flex: 1; padding: 12px; border: 1px solid var(--ink-soft); background: #fff; color: var(--ink-soft); font-weight: 700; font-size: 12px; cursor: pointer; }
+  .lg-undo-btn { flex: 1; padding: 12px; border: 1px solid var(--ink-soft); background: #fff; color: var(--ink-soft); font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; }
   .lg-undo-btn:disabled { opacity: 0.4; cursor: default; }
 
   .lg-total-panel { border: 1px solid var(--ink); background: rgba(247,244,236,0.6); padding: 16px; margin-bottom: 18px; text-align: center; }
@@ -194,7 +194,6 @@
     </div>
 
     <div class="lg-action-row">
-      <button class="lg-save-btn" id="saveBtn">저장하기</button>
       <button class="lg-undo-btn" id="undoBtn" disabled>실행 취소</button>
     </div>
 
@@ -396,7 +395,6 @@
   let state = loadLocal();
   let openItem = null;
   let editingTxId = null;
-  let txDraftType = {};
   let activeTab = "items";
   let lastTxId = null;
 
@@ -404,12 +402,12 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
     catch (e) { console.error("로컬 저장 실패", e); }
   }
-  async function saveState(showNote) {
+  async function saveState() {
     saveLocal();
     if (firebaseReady && currentUser && window.__lgSaveCloud) {
       await window.__lgSaveCloud(state);
-    } else if (showNote) {
-      setSyncNote("이 기기에 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
+    } else {
+      setSyncNote("자동 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
     }
   }
 
@@ -556,7 +554,6 @@
         const item = it.name;
         const bal = currentBalance(item);
         const isOpen = openItem === item;
-        const curType = txDraftType[item] || "out";
         const groups = buildMonthGroups(item);
 
         const historyHtml = groups.length === 0
@@ -596,21 +593,6 @@
             '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
           '</div>' +
           '<div class="lg-item-body">' +
-            '<div class="lg-tx-form">' +
-              '<div class="lg-type-switch">' +
-                '<button type="button" class="lg-type-btn out' + (curType === "out" ? " active out" : "") + '" data-settype="' + esc(item) + '" data-type="out">출금</button>' +
-                '<button type="button" class="lg-type-btn in' + (curType === "in" ? " active in" : "") + '" data-settype="' + esc(item) + '" data-type="in">입금</button>' +
-              '</div>' +
-              '<input type="number" inputmode="numeric" min="0" placeholder="금액" id="amt-' + esc(item) + '" />' +
-              '<div class="lg-row">' +
-                '<input type="text" placeholder="메모 (선택)" maxlength="20" id="memo-' + esc(item) + '" />' +
-                '<input type="date" id="date-' + esc(item) + '" value="' + todayISO() + '" />' +
-              '</div>' +
-              '<div class="lg-tx-btn-row">' +
-                '<button type="button" class="lg-tx-submit" data-submit="' + esc(item) + '">기록하기</button>' +
-                '<button type="button" class="lg-tx-cancel" data-cancel="' + esc(item) + '">되돌리기</button>' +
-              '</div>' +
-            '</div>' +
             '<div class="lg-history-label">거래 내역 (월별)</div>' +
             historyHtml +
           '</div>' +
@@ -669,35 +651,6 @@
         editTransaction(id, date, amt, memo);
       };
     });
-    document.querySelectorAll("[data-settype]").forEach((el) => {
-      el.onclick = (e) => { e.stopPropagation(); const item = el.getAttribute("data-settype"); txDraftType[item] = el.getAttribute("data-type"); openItem = item; render(); };
-    });
-    document.querySelectorAll("[data-submit]").forEach((el) => {
-      el.onclick = (e) => {
-        e.stopPropagation();
-        const item = el.getAttribute("data-submit");
-        const amt = Number(document.getElementById("amt-" + item).value);
-        if (!amt || amt <= 0) return;
-        const memo = document.getElementById("memo-" + item).value;
-        const date = document.getElementById("date-" + item).value;
-        const type = txDraftType[item] || "out";
-        openItem = item;
-        addTransaction(item, type, amt, memo, date);
-        txDraftType[item] = "out";
-      };
-    });
-    document.querySelectorAll("[data-cancel]").forEach((el) => {
-      el.onclick = (e) => {
-        e.stopPropagation();
-        const item = el.getAttribute("data-cancel");
-        document.getElementById("amt-" + item).value = "";
-        document.getElementById("memo-" + item).value = "";
-        document.getElementById("date-" + item).value = todayISO();
-        txDraftType[item] = "out";
-        render();
-        openItem = item;
-      };
-    });
     document.querySelectorAll("[data-del]").forEach((el) => {
       el.onclick = (e) => { e.stopPropagation(); deleteTransaction(el.getAttribute("data-del")); };
     });
@@ -717,7 +670,6 @@
     if (ok) { nameEl.value = ""; balEl.value = ""; render(); }
   };
 
-  document.getElementById("saveBtn").onclick = () => saveState(true);
   document.getElementById("undoBtn").onclick = () => undoLast();
 
   document.querySelectorAll(".lg-tab-btn").forEach((btn) => {
