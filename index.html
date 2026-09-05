@@ -154,6 +154,14 @@
   .lg-stamp-value.expense { color: var(--red-ink); }
   .lg-empty { text-align: center; padding: 20px 12px; color: var(--ink-soft); font-size: 13px; border: 1px dashed var(--paper-line); }
 
+  .lg-ratio-chart { display: flex; align-items: center; gap: 20px; padding: 14px 4px 18px; }
+  .lg-ratio-donut { width: 96px; height: 96px; border-radius: 50%; flex-shrink: 0; position: relative; }
+  .lg-ratio-donut::after { content: ""; position: absolute; inset: 16px; background: var(--paper); border-radius: 50%; }
+  .lg-ratio-legend { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+  .lg-ratio-legend-row { display: flex; align-items: center; gap: 8px; }
+  .lg-ratio-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .lg-ratio-pct { font-weight: 700; margin-left: auto; padding-left: 12px; }
+
   .lg-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .lg-table th { text-align: left; font-weight: 700; color: var(--ink-soft); border-bottom: 1px solid var(--ink); padding: 6px 4px; font-size: 11px; }
   .lg-table td { padding: 7px 4px; border-bottom: 1px solid var(--paper-line); vertical-align: middle; }
@@ -261,6 +269,7 @@
           <div class="lg-stamp"><div class="lg-stamp-label">총 출금</div><div id="totalOut" class="lg-stamp-value expense">0원</div></div>
           <div class="lg-stamp"><div class="lg-stamp-label">순변동</div><div id="netChange" class="lg-stamp-value">0원</div></div>
         </div>
+        <div id="ratioChart" class="lg-ratio-chart"></div>
         <div id="allHistory"></div>
       </div>
     </div>
@@ -700,6 +709,22 @@
     const netEl = document.getElementById("netChange");
     netEl.textContent = formatWon(totalIn - totalOut);
     netEl.className = "lg-stamp-value " + (totalIn - totalOut < 0 ? "expense" : "income");
+
+    const chartEl = document.getElementById("ratioChart");
+    const chartTotal = totalIn + totalOut;
+    if (chartTotal === 0) {
+      chartEl.innerHTML = "";
+    } else {
+      const inPct = Math.round((totalIn / chartTotal) * 100);
+      const outPct = 100 - inPct;
+      const inDeg = (inPct / 100) * 360;
+      chartEl.innerHTML =
+        '<div class="lg-ratio-donut" style="background: conic-gradient(var(--green-ink) 0deg ' + inDeg + 'deg, var(--red-ink) ' + inDeg + 'deg 360deg);"></div>' +
+        '<div class="lg-ratio-legend">' +
+          '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background: var(--green-ink);"></span><span>입금</span><span class="lg-ratio-pct income">' + inPct + '%</span></div>' +
+          '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background: var(--red-ink);"></span><span>출금</span><span class="lg-ratio-pct expense">' + outPct + '%</span></div>' +
+        '</div>';
+    }
 
     const histEl = document.getElementById("allHistory");
     if (all.length === 0) {
