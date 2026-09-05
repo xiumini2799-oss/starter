@@ -193,7 +193,7 @@
   </div>
 
   <!-- 뒤로가기 두 번 눌러 종료 -->
-  <div id="exitToast" class="lg-exit-toast">한 번 더 누르면 종료됩니다</div>
+  <div id="exitToast" class="lg-exit-toast">'뒤로가기'를 한 번 더 누르시면 종료됩니다</div>
 
   <!-- 메인 화면 -->
   <div id="appScreen" class="hidden">
@@ -262,31 +262,38 @@
   </div>
 
 <script type="module">
-  // ===================== 뒤로가기 두 번 눌러 종료 (최대한 빨리 등록) =====================
+  // ===================== 뒤로가기 두 번 눌러 종료 =====================
   function armExitGuard() {
     history.pushState({ lgExitGuard: true }, "", location.href);
   }
-  armExitGuard();
-  armExitGuard();
 
   let exitPrimed = false;
   let exitPrimedTimer = null;
 
-  window.addEventListener("popstate", () => {
-    if (exitPrimed) {
-      exitPrimed = false;
-      clearTimeout(exitPrimedTimer);
-      document.getElementById("exitToast").classList.remove("show");
-      return;
-    }
-    exitPrimed = true;
+  function setupExitGuard() {
     armExitGuard();
-    document.getElementById("exitToast").classList.add("show");
-    exitPrimedTimer = setTimeout(() => {
-      exitPrimed = false;
-      document.getElementById("exitToast").classList.remove("show");
-    }, 2000);
-  });
+    armExitGuard();
+    window.addEventListener("popstate", () => {
+      if (exitPrimed) {
+        exitPrimed = false;
+        clearTimeout(exitPrimedTimer);
+        document.getElementById("exitToast").classList.remove("show");
+        return;
+      }
+      exitPrimed = true;
+      armExitGuard();
+      document.getElementById("exitToast").classList.add("show");
+      exitPrimedTimer = setTimeout(() => {
+        exitPrimed = false;
+        document.getElementById("exitToast").classList.remove("show");
+      }, 2000);
+    });
+  }
+  if (document.readyState === "complete") {
+    setupExitGuard();
+  } else {
+    window.addEventListener("load", setupExitGuard);
+  }
 
   // ===================== Firebase (구글 로그인 + 기기 간 동기화) =====================
   const firebaseConfig = {
