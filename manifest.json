@@ -1,6 +1,6 @@
 {
-  "name": "가계부",
-  "short_name": "가계부",
+  "name": "예산별 가계부",
+  "short_name": "예산별 가계부",
   "description": "용돈, 비상금, 통신비, 교통비, 경조사비, 저축 항목별 잔액을 관리하는 가계부",
   "start_url": "./index.html",
   "scope": "./",
