@@ -163,6 +163,11 @@
   .lg-ratio-legend-row { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
   .lg-ratio-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .lg-ratio-pct { font-weight: 700; }
+  .lg-donut-label {
+    position: absolute; transform: translate(-50%, -50%);
+    font-size: 9px; font-weight: 700; color: #fff;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.35); pointer-events: none;
+  }
   .lg-sub-title { margin-top: 8px; font-size: 13px; }
 
   .lg-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
@@ -376,18 +381,30 @@
         currentUser = user;
         if (user) {
           guestMode = false;
+          const localCached = loadFromKey(cloudCacheKey(user.uid));
           try {
             const snap = await getDoc(doc(db, "ledgers", user.uid));
             if (snap.exists()) {
-              state = snap.data();
-              saveLocal();
-              setSyncNote("클라우드 데이터 불러옴");
+              const cloudData = snap.data();
+              const cloudTime = cloudData.updatedAt || 0;
+              const localTime = localCached.updatedAt || 0;
+              if (localTime > cloudTime) {
+                // 오프라인일 때 이 기기에 저장된 내용이 클라우드보다 최신 - 클라우드에 반영
+                state = localCached;
+                saveLocal();
+                await window.__lgSaveCloud(state);
+                setSyncNote("오프라인 중 저장한 내용을 클라우드에 반영함");
+              } else {
+                state = cloudData;
+                saveLocal();
+                setSyncNote("클라우드 데이터 불러옴");
+              }
             } else {
-              state = loadFromKey(cloudCacheKey(user.uid));
+              state = localCached;
               await window.__lgSaveCloud(state);
             }
           } catch (e) {
-            state = loadFromKey(cloudCacheKey(user.uid));
+            state = localCached;
             setSyncNote("클라우드 연결 실패 (이 계정의 이 기기 저장분으로 계속 사용)");
           }
           revealAppScreen();
@@ -504,11 +521,16 @@
     catch (e) { console.error("로컬 저장 실패", e); }
   }
   async function saveState() {
+    state.updatedAt = Date.now();
     saveLocal();
     if (firebaseReady && currentUser && window.__lgSaveCloud) {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        setSyncNote("오프라인 - 이 기기에 저장 완료 (온라인 시 자동 반영)");
+        return;
+      }
       await window.__lgSaveCloud(state);
     } else {
-      setSyncNote("자동 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
+      setSyncNote("저장 완료 · " + new Date().toLocaleTimeString("ko-KR"));
     }
   }
 
@@ -661,20 +683,29 @@
     let cursor = 0;
     const gradientParts = [];
     const legendParts = [];
+    const labelParts = [];
+    const cx = 30, cy = 30, r = 25;
     entries.forEach(([name, amt]) => {
       const pctNum = (amt / total) * 100;
       const deg = (amt / total) * 360;
       const it = getItem(name);
       const color = it ? it.color : "#8A7C52";
       gradientParts.push(color + " " + cursor + "deg " + (cursor + deg) + "deg");
+      const midDeg = cursor + deg / 2;
       cursor += deg;
+      const rad = (midDeg * Math.PI) / 180;
+      const x = cx + r * Math.sin(rad);
+      const y = cy - r * Math.cos(rad);
+      labelParts.push(
+        '<span class="lg-donut-label" style="left:' + x + 'px; top:' + y + 'px;">' + esc(name.charAt(0)) + '</span>'
+      );
       legendParts.push(
         '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background:' + color + ';"></span>' +
-        '<span>' + esc(name.charAt(0)) + '</span><span class="lg-ratio-pct">' + formatPct(pctNum) + '</span></div>'
+        '<span class="lg-ratio-pct">' + formatPct(pctNum) + '</span></div>'
       );
     });
     el.innerHTML =
-      '<div class="lg-ratio-donut" style="background: conic-gradient(' + gradientParts.join(", ") + ');"></div>' +
+      '<div class="lg-ratio-donut" style="background: conic-gradient(' + gradientParts.join(", ") + ');">' + labelParts.join("") + '</div>' +
       '<div class="lg-ratio-legend">' + legendParts.join("") + '</div>';
   }
 
