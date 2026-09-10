@@ -163,11 +163,7 @@
   .lg-ratio-legend-row { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
   .lg-ratio-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .lg-ratio-pct { font-weight: 700; }
-  .lg-donut-label {
-    position: absolute; transform: translate(-50%, -50%);
-    font-size: 9px; font-weight: 700; color: #fff;
-    text-shadow: 0 1px 1px rgba(0,0,0,0.35); pointer-events: none;
-  }
+  .lg-donut-svg { width: 100%; max-width: 320px; height: auto; display: block; margin: 0 auto; }
   .lg-sub-title { margin-top: 8px; font-size: 13px; }
 
   .lg-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
@@ -253,7 +249,7 @@
     <div class="lg-tab-panel active" id="tabPanelItems">
       <div class="lg-quick-panel">
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="형식: 항목 금액 메모" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="입력: 메모 금액 분류" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
         <div id="quickError" class="lg-error hidden"></div>
@@ -629,12 +625,12 @@
     if (!raw) return;
     const tokens = raw.split(/\s+/);
     if (tokens.length < 2) return;
-    const item = tokens[0];
-    const m = tokens[1].match(/^(-?)(\d+)$/);
+    const item = tokens[tokens.length - 1];
+    const m = tokens[tokens.length - 2].match(/^(-?)(\d+)$/);
     if (!m) return;
     const type = m[1] === "-" ? "out" : "in";
     const amount = Number(m[2]);
-    const memo = tokens.slice(2).join(" ");
+    const memo = tokens.slice(0, tokens.length - 2).join(" ");
     addTransaction(item, type, amount, memo, todayISO());
     input.value = "";
   }
@@ -663,6 +659,22 @@
     return groups;
   }
 
+  function polarXY(cx, cy, r, deg) {
+    const rad = (deg * Math.PI) / 180;
+    return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+  }
+  function donutSegmentPath(cx, cy, rOuter, rInner, startDeg, endDeg) {
+    const large = endDeg - startDeg > 180 ? 1 : 0;
+    const p1 = polarXY(cx, cy, rOuter, startDeg);
+    const p2 = polarXY(cx, cy, rOuter, endDeg);
+    const p3 = polarXY(cx, cy, rInner, endDeg);
+    const p4 = polarXY(cx, cy, rInner, startDeg);
+    return "M " + p1.x + " " + p1.y +
+      " A " + rOuter + " " + rOuter + " 0 " + large + " 1 " + p2.x + " " + p2.y +
+      " L " + p3.x + " " + p3.y +
+      " A " + rInner + " " + rInner + " 0 " + large + " 0 " + p4.x + " " + p4.y + " Z";
+  }
+
   function renderItemBreakdown(elId, type, titleId) {
     const el = document.getElementById(elId);
     if (!el) return;
@@ -680,33 +692,55 @@
       return;
     }
     if (titleEl) titleEl.classList.remove("hidden");
+
+    const cx = 150, cy = 60, rOuter = 38, rInner = 22;
     let cursor = 0;
-    const gradientParts = [];
-    const legendParts = [];
-    const labelParts = [];
-    const cx = 30, cy = 30, r = 25;
-    entries.forEach(([name, amt]) => {
+    const segs = entries.map(([name, amt]) => {
       const pctNum = (amt / total) * 100;
       const deg = (amt / total) * 360;
+      const start = cursor;
+      const end = cursor + deg;
+      const midDeg = start + deg / 2;
+      cursor = end;
       const it = getItem(name);
       const color = it ? it.color : "#8A7C52";
-      gradientParts.push(color + " " + cursor + "deg " + (cursor + deg) + "deg");
-      const midDeg = cursor + deg / 2;
-      cursor += deg;
-      const rad = (midDeg * Math.PI) / 180;
-      const x = cx + r * Math.sin(rad);
-      const y = cy - r * Math.cos(rad);
-      labelParts.push(
-        '<span class="lg-donut-label" style="left:' + x + 'px; top:' + y + 'px;">' + esc(name.charAt(0)) + '</span>'
-      );
-      legendParts.push(
-        '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background:' + color + ';"></span>' +
-        '<span class="lg-ratio-pct">' + formatPct(pctNum) + '</span></div>'
-      );
+      const anchor = polarXY(cx, cy, rOuter, midDeg);
+      const side = Math.sin((midDeg * Math.PI) / 180) >= 0 ? "right" : "left";
+      return { name, pctNum, color, path: donutSegmentPath(cx, cy, rOuter, rInner, start, end), anchor, side };
     });
+
+    const leftSegs = segs.filter((s) => s.side === "left");
+    const rightSegs = segs.filter((s) => s.side === "right");
+    function assignLabelY(list) {
+      const n = list.length;
+      const spacing = Math.min(18, 84 / Math.max(n, 1));
+      const startY = cy - ((n - 1) * spacing) / 2;
+      list
+        .slice()
+        .sort((a, b) => a.anchor.y - b.anchor.y)
+        .forEach((s, i) => { s.labelY = startY + i * spacing; });
+    }
+    assignLabelY(leftSegs);
+    assignLabelY(rightSegs);
+
+    const pathsSvg = segs.map((s) => '<path d="' + s.path + '" fill="' + s.color + '"></path>').join("");
+    const labelsSvg = segs.map((s) => {
+      const labelX = s.side === "left" ? cx - rOuter - 10 : cx + rOuter + 10;
+      const anchorTextX = s.side === "left" ? labelX + 4 : labelX - 4;
+      const textAnchor = s.side === "left" ? "end" : "start";
+      const text = esc(s.name) + " " + formatPct(s.pctNum);
+      return (
+        '<line x1="' + s.anchor.x + '" y1="' + s.anchor.y + '" x2="' + anchorTextX + '" y2="' + s.labelY +
+        '" stroke="' + s.color + '" stroke-width="1"></line>' +
+        '<text x="' + labelX + '" y="' + s.labelY + '" text-anchor="' + textAnchor +
+        '" dominant-baseline="middle" font-size="9" font-weight="700" fill="' + s.color + '">' + text + '</text>'
+      );
+    }).join("");
+
     el.innerHTML =
-      '<div class="lg-ratio-donut" style="background: conic-gradient(' + gradientParts.join(", ") + ');">' + labelParts.join("") + '</div>' +
-      '<div class="lg-ratio-legend">' + legendParts.join("") + '</div>';
+      '<svg viewBox="0 0 300 120" class="lg-donut-svg" xmlns="http://www.w3.org/2000/svg">' +
+      pathsSvg + labelsSvg +
+      '</svg>';
   }
 
   function render() {
