@@ -249,7 +249,7 @@
     <div class="lg-tab-panel active" id="tabPanelItems">
       <div class="lg-quick-panel">
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="입력: 메모 금액 분류" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="입력: 내용 금액 분류" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
         <div id="quickError" class="lg-error hidden"></div>
@@ -726,12 +726,9 @@
     const pathsSvg = segs.map((s) => '<path d="' + s.path + '" fill="' + s.color + '"></path>').join("");
     const labelsSvg = segs.map((s) => {
       const labelX = s.side === "left" ? cx - rOuter - 10 : cx + rOuter + 10;
-      const anchorTextX = s.side === "left" ? labelX + 4 : labelX - 4;
       const textAnchor = s.side === "left" ? "end" : "start";
       const text = esc(s.name) + " " + formatPct(s.pctNum);
       return (
-        '<line x1="' + s.anchor.x + '" y1="' + s.anchor.y + '" x2="' + anchorTextX + '" y2="' + s.labelY +
-        '" stroke="' + s.color + '" stroke-width="1"></line>' +
         '<text x="' + labelX + '" y="' + s.labelY + '" text-anchor="' + textAnchor +
         '" dominant-baseline="middle" font-size="9" font-weight="700" fill="' + s.color + '">' + text + '</text>'
       );
@@ -785,7 +782,7 @@
                     '<div class="lg-tx-edit-fields">' +
                       '<input type="date" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-date-' + t.id + '" value="' + t.date + '" />' +
                       '<input type="number" inputmode="numeric" min="0" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-amt-' + t.id + '" value="' + Math.abs(t.amount) + '" />' +
-                      '<input type="text" maxlength="20" placeholder="메모" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-memo-' + t.id + '" value="' + esc(t.memo) + '" />' +
+                      '<input type="text" maxlength="20" placeholder="내용" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-memo-' + t.id + '" value="' + esc(t.memo) + '" />' +
                     '</div>' +
                     '<div class="lg-tx-edit-btns">' +
                       '<button data-savetx="' + t.id + '">저장</button>' +
@@ -853,7 +850,7 @@
     } else {
       const colorMap = {};
       state.items.forEach((i) => (colorMap[i.name] = i.color));
-      histEl.innerHTML = '<table class="lg-table"><colgroup><col class="col-date"><col class="col-item"><col class="col-type"><col class="col-amount"><col class="col-memo"></colgroup><thead><tr><th>날짜</th><th>항목</th><th>구분</th><th>금액</th><th>메모</th></tr></thead><tbody>' +
+      histEl.innerHTML = '<table class="lg-table"><colgroup><col class="col-date"><col class="col-item"><col class="col-type"><col class="col-amount"><col class="col-memo"></colgroup><thead><tr><th>날짜</th><th>항목</th><th>구분</th><th>금액</th><th>내용</th></tr></thead><tbody>' +
         all.map((t) => {
           const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
           const typeLabel = t.type === "in" ? "입금" : t.type === "out" ? "출금" : "설정";
