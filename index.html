@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-<title>예산별 가계부</title>
+<title>잔액 관리 가계부</title>
 <meta name="theme-color" content="#1F2A44" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="예산별 가계부" />
+<meta name="apple-mobile-web-app-title" content="잔액 관리 가계부" />
 <link rel="manifest" href="./manifest.json" />
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="icon" href="./icon-192.png" />
@@ -148,6 +148,11 @@
 
   .lg-panel { border: 1px solid var(--ink); background: rgba(247,244,236,0.6); padding: 14px 16px; margin-bottom: 16px; }
   .lg-section-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 15px; margin-bottom: 10px; }
+  .lg-hist-month-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .lg-hist-nav-btn { background: none; border: none; color: var(--ink); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; }
+  .lg-hist-month-label { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 14px; min-width: 88px; text-align: center; }
+  .lg-hist-all-btn { margin-left: auto; padding: 5px 10px; border: 1px solid var(--paper-line); background: #fff; color: var(--ink-soft); font-size: 11px; cursor: pointer; }
+  .lg-hist-all-btn.active { background: var(--stamp); color: #fff; border-color: var(--stamp); }
   .lg-summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
   .lg-stamp { text-align: center; padding: 6px 2px; }
   .lg-stamp-label { font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
@@ -201,14 +206,14 @@
 
   <!-- 스플래시 화면 -->
   <div id="loadingScreen">
-    <img src="./icon-512.png" class="splash-logo" alt="예산별 가계부" />
-    <div class="login-title">예산별 가계부</div>
+    <img src="./icon-512.png" class="splash-logo" alt="잔액 관리 가계부" />
+    <div class="login-title">잔액 관리 가계부</div>
     <div class="splash-tagline">제약 없는 삶!</div>
   </div>
 
   <!-- 로그인 화면 -->
   <div id="loginScreen" class="hidden">
-    <div class="login-title">예산별 가계부</div>
+    <div class="login-title">잔액 관리 가계부</div>
     <button class="login-google-btn" id="loginBtnMain">구글로 로그인</button>
     <button class="login-guest-link" id="guestBtn">로그인 없이 이 기기에서만 사용하기</button>
     <div id="loginError" class="login-error"></div>
@@ -220,7 +225,7 @@
   <!-- 메인 화면 -->
   <div id="appScreen" class="hidden">
     <div class="lg-header">
-      <div class="lg-title">예산별 가계부</div>
+      <div class="lg-title">잔액 관리 가계부</div>
       <button class="lg-account-btn" id="accountBtn">＋</button>
       <div class="lg-account-panel" id="accountPanel">
         <div class="lg-account-name" id="accountName"></div>
@@ -272,7 +277,13 @@
 
     <div class="lg-tab-panel" id="tabPanelHistory">
       <div class="lg-panel">
-        <div class="lg-section-title">전체 내역</div>
+        <div class="lg-hist-month-nav">
+          <button id="histPrevMonth" class="lg-hist-nav-btn">‹</button>
+          <span id="histMonthLabel" class="lg-hist-month-label">전체</span>
+          <button id="histNextMonth" class="lg-hist-nav-btn">›</button>
+          <button id="histAllToggle" class="lg-hist-all-btn">전체보기</button>
+        </div>
+        <div class="lg-section-title" id="histSectionTitle">전체 내역</div>
         <div class="lg-summary-grid">
           <div class="lg-stamp"><div class="lg-stamp-label">총 입금</div><div id="totalIn" class="lg-stamp-value income">0원</div></div>
           <div class="lg-stamp"><div class="lg-stamp-label">총 출금</div><div id="totalOut" class="lg-stamp-value expense">0원</div></div>
@@ -337,7 +348,7 @@
   async function initFirebase() {
     try {
       const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-      const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } =
+      const { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
       const { getFirestore, doc, getDoc, setDoc } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
@@ -347,11 +358,17 @@
       db = getFirestore(app);
       firebaseReady = true;
 
+      try {
+        await getRedirectResult(auth);
+      } catch (e) {
+        document.getElementById("loginError").textContent = "로그인에 실패했어요 (" + (e && e.code ? e.code : "오류") + "). 다시 시도해주세요.";
+      }
+
       window.__lgSignIn = async () => {
         document.getElementById("loginError").textContent = "";
         try {
           const provider = new GoogleAuthProvider();
-          await signInWithPopup(auth, provider);
+          await signInWithRedirect(auth, provider);
         } catch (e) {
           document.getElementById("loginError").textContent = "로그인에 실패했어요. 다시 시도해주세요.";
         }
@@ -510,6 +527,8 @@
   let editingTxId = null;
   let editingItemName = null;
   let activeTab = "items";
+  let historyMonth = todayISO().slice(0, 7);
+  let historyShowAll = false;
 
   function saveLocal() {
     const key = currentUser ? cloudCacheKey(currentUser.uid) : GUEST_STORAGE_KEY;
@@ -543,6 +562,11 @@
     return (d.getMonth()+1) + "." + d.getDate() + " (" + weekdays[d.getDay()] + ")";
   }
   function formatMonthLabel(mk) { const [y,m] = mk.split("-").map(Number); return y + "년 " + m + "월"; }
+  function shiftMonth(mk, delta) {
+    const [y, m] = mk.split("-").map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
   function esc(s) { const div = document.createElement("div"); div.textContent = s == null ? "" : s; return div.innerHTML; }
 
   function getItem(name) { return state.items.find((i) => i.name === name); }
@@ -675,12 +699,13 @@
       " A " + rInner + " " + rInner + " 0 " + large + " 0 " + p4.x + " " + p4.y + " Z";
   }
 
-  function renderItemBreakdown(elId, type, titleId) {
+  function renderItemBreakdown(elId, type, titleId, txList) {
     const el = document.getElementById(elId);
     if (!el) return;
     const titleEl = titleId ? document.getElementById(titleId) : null;
+    const source = txList || state.transactions;
     const map = {};
-    for (const t of state.transactions) {
+    for (const t of source) {
       if (t.type !== type) continue;
       map[t.item] = (map[t.item] || 0) + t.amount;
     }
@@ -816,7 +841,16 @@
       }).join("");
     }
 
-    const all = [...state.transactions].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
+    // 월 탐색 UI 갱신
+    const monthLabelEl = document.getElementById("histMonthLabel");
+    const allToggleBtn = document.getElementById("histAllToggle");
+    const sectionTitleEl = document.getElementById("histSectionTitle");
+    if (monthLabelEl) monthLabelEl.textContent = historyShowAll ? "전체" : formatMonthLabel(historyMonth);
+    if (allToggleBtn) allToggleBtn.classList.toggle("active", historyShowAll);
+    if (sectionTitleEl) sectionTitleEl.textContent = historyShowAll ? "전체 내역" : formatMonthLabel(historyMonth) + " 내역";
+
+    const all = (historyShowAll ? [...state.transactions] : state.transactions.filter((t) => t.date.slice(0, 7) === historyMonth))
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
     const totalIn = all.filter((t) => t.type === "in").reduce((s, t) => s + t.amount, 0);
     const totalOut = all.filter((t) => t.type === "out").reduce((s, t) => s + t.amount, 0);
     document.getElementById("totalIn").textContent = formatWon(totalIn);
@@ -841,8 +875,8 @@
         '</div>';
     }
 
-    renderItemBreakdown("incomeByItemChart", "in", "incomeByItemTitle");
-    renderItemBreakdown("expenseByItemChart", "out", "expenseByItemTitle");
+    renderItemBreakdown("incomeByItemChart", "in", "incomeByItemTitle", all);
+    renderItemBreakdown("expenseByItemChart", "out", "expenseByItemTitle", all);
 
     const histEl = document.getElementById("allHistory");
     if (all.length === 0) {
@@ -955,6 +989,21 @@
       document.getElementById("tabPanelHistory").classList.toggle("active", activeTab === "history");
     };
   });
+
+  document.getElementById("histPrevMonth").onclick = () => {
+    historyShowAll = false;
+    historyMonth = shiftMonth(historyMonth, -1);
+    render();
+  };
+  document.getElementById("histNextMonth").onclick = () => {
+    historyShowAll = false;
+    historyMonth = shiftMonth(historyMonth, 1);
+    render();
+  };
+  document.getElementById("histAllToggle").onclick = () => {
+    historyShowAll = !historyShowAll;
+    render();
+  };
 
   let deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById("installBanner").classList.add("show"); });
