@@ -348,7 +348,7 @@
   async function initFirebase() {
     try {
       const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-      const { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } =
+      const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
       const { getFirestore, doc, getDoc, setDoc } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
@@ -358,22 +358,13 @@
       db = getFirestore(app);
       firebaseReady = true;
 
-      try {
-        const redirectResult = await getRedirectResult(auth);
-        document.getElementById("loginError").textContent =
-          "[진단] redirectResult: " + (redirectResult ? ("성공, uid=" + redirectResult.user.uid) : "null") +
-          " / auth.currentUser: " + (auth.currentUser ? auth.currentUser.uid : "없음");
-      } catch (e) {
-        document.getElementById("loginError").textContent = "[진단] 오류: " + (e && e.code ? e.code : String(e));
-      }
-
       window.__lgSignIn = async () => {
         document.getElementById("loginError").textContent = "";
         try {
           const provider = new GoogleAuthProvider();
-          await signInWithRedirect(auth, provider);
+          await signInWithPopup(auth, provider);
         } catch (e) {
-          document.getElementById("loginError").textContent = "로그인에 실패했어요. 다시 시도해주세요.";
+          document.getElementById("loginError").textContent = "로그인에 실패했어요 (" + (e && e.code ? e.code : "오류") + "). 다시 시도해주세요.";
         }
       };
       window.__lgSignOut = async () => {
