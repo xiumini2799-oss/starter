@@ -359,9 +359,12 @@
       firebaseReady = true;
 
       try {
-        await getRedirectResult(auth);
+        const redirectResult = await getRedirectResult(auth);
+        document.getElementById("loginError").textContent =
+          "[진단] redirectResult: " + (redirectResult ? ("성공, uid=" + redirectResult.user.uid) : "null") +
+          " / auth.currentUser: " + (auth.currentUser ? auth.currentUser.uid : "없음");
       } catch (e) {
-        document.getElementById("loginError").textContent = "로그인에 실패했어요 (" + (e && e.code ? e.code : "오류") + "). 다시 시도해주세요.";
+        document.getElementById("loginError").textContent = "[진단] 오류: " + (e && e.code ? e.code : String(e));
       }
 
       window.__lgSignIn = async () => {
