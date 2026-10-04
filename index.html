@@ -150,9 +150,11 @@
   .lg-section-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 15px; margin-bottom: 10px; }
   .lg-hist-month-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .lg-hist-nav-btn { background: none; border: none; color: var(--ink); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; }
+  .lg-hist-nav-btn:disabled { color: var(--paper-line); cursor: default; }
   .lg-hist-month-label { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 14px; min-width: 88px; text-align: center; }
   .lg-hist-all-btn { margin-left: auto; padding: 5px 10px; border: 1px solid var(--paper-line); background: #fff; color: var(--ink-soft); font-size: 11px; cursor: pointer; }
-  .lg-hist-all-btn.active { background: var(--stamp); color: #fff; border-color: var(--stamp); }
+  .lg-hist-all-btn.active { background: var(--stamp); color: #fff; border-color: var(--stamp); font-weight: 700; }
+  .lg-item-month-nav { margin-top: 10px; }
   .lg-summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
   .lg-stamp { text-align: center; padding: 6px 2px; }
   .lg-stamp-label { font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
@@ -520,6 +522,8 @@
   let openItem = null;
   let editingTxId = null;
   let editingItemName = null;
+  let itemHistoryMonth = {};
+  let itemHistoryShowAll = {};
   let activeTab = "items";
   let historyMonth = todayISO().slice(0, 7);
   let historyShowAll = false;
@@ -595,12 +599,13 @@
     render();
   }
 
-  function editTransaction(id, newDate, newAmount, newMemo) {
+  function editTransaction(id, newDate, newAmount, newMemo, newType) {
     const tx = state.transactions.find((t) => t.id === id);
     if (!tx) return;
     tx.date = newDate || tx.date;
     tx.amount = newAmount;
     tx.memo = (newMemo || "").trim().slice(0, 20);
+    if (newType && tx.type !== "adjust") tx.type = newType;
     saveState();
     editingTxId = null;
     render();
@@ -675,6 +680,29 @@
     groups.reverse();
     groups.forEach((g) => g.txs.reverse());
     return groups;
+  }
+
+  function buildSingleMonthGroup(name, monthKey) {
+    const it = getItem(name);
+    const list = state.transactions
+      .filter((t) => t.item === name)
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.createdAt - b.createdAt));
+    let running = it ? (it.initialBalance || 0) : 0;
+    let opening = running;
+    const txs = [];
+    for (const t of list) {
+      const delta = t.type === "in" ? t.amount : t.type === "out" ? -t.amount : t.amount;
+      const mk = t.date.slice(0, 7);
+      if (mk < monthKey) {
+        running += delta;
+        opening = running;
+      } else if (mk === monthKey) {
+        running += delta;
+        txs.push({ ...t, balanceAfter: running });
+      }
+    }
+    txs.reverse();
+    return { month: monthKey, opening, txs };
   }
 
   function polarXY(cx, cy, r, deg) {
@@ -789,9 +817,11 @@
         const item = it.name;
         const bal = currentBalance(item);
         const isOpen = openItem === item;
-        const groups = buildMonthGroups(item);
+        const itemSelMonth = itemHistoryMonth[item] || todayISO().slice(0, 7);
+        const itemShowAll = !!itemHistoryShowAll[item];
+        const groups = itemShowAll ? buildMonthGroups(item) : [buildSingleMonthGroup(item, itemSelMonth)];
 
-        const historyHtml = groups.length === 0
+        const historyHtml = (itemShowAll && groups.length === 0)
           ? '<div class="lg-empty-tx">아직 기록이 없어요.</div>'
           : groups.map((g) => {
               const txHtml = g.txs.map((t) => {
@@ -800,7 +830,7 @@
                   return '<div class="lg-tx-item lg-tx-edit-row">' +
                     '<div class="lg-tx-edit-fields">' +
                       '<input type="date" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-date-' + t.id + '" value="' + t.date + '" />' +
-                      '<input type="number" inputmode="numeric" min="0" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-amt-' + t.id + '" value="' + Math.abs(t.amount) + '" />' +
+                      '<input type="number" inputmode="numeric" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-amt-' + t.id + '" value="' + (t.type === "out" ? "-" : "") + Math.abs(t.amount) + '" />' +
                       '<input type="text" maxlength="20" placeholder="내용" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-memo-' + t.id + '" value="' + esc(t.memo) + '" />' +
                     '</div>' +
                     '<div class="lg-tx-edit-btns">' +
@@ -816,7 +846,7 @@
                   (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</span>' +
                   '<button class="lg-edit-tx" data-edittx="' + t.id + '">수정</button>' +
                   '<button class="lg-delete" data-del="' + t.id + '">×</button></div></div>';
-              }).join("");
+              }).join("") || '<div class="lg-empty-tx">이 달 기록이 없어요.</div>';
               return '<div class="lg-month-group"><div class="lg-month-header">' + formatMonthLabel(g.month) +
                 ' · 이월 ' + formatWon(g.opening) + '</div>' + txHtml + '</div>';
             }).join("");
@@ -828,7 +858,13 @@
             '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
           '</div>' +
           '<div class="lg-item-body">' +
-            '<div class="lg-history-label">거래 내역 (월별)</div>' +
+            '<div class="lg-hist-month-nav lg-item-month-nav">' +
+              '<button class="lg-hist-nav-btn" data-itemprevmonth="' + esc(item) + '"' + (itemShowAll ? ' disabled' : '') + '>‹</button>' +
+              '<span class="lg-hist-month-label">' + (itemShowAll ? "전체 보는 중" : formatMonthLabel(itemSelMonth)) + '</span>' +
+              '<button class="lg-hist-nav-btn" data-itemnextmonth="' + esc(item) + '"' + (itemShowAll ? ' disabled' : '') + '>›</button>' +
+              '<button class="lg-hist-all-btn' + (itemShowAll ? ' active' : '') + '" data-itemalltoggle="' + esc(item) + '">' + (itemShowAll ? "월별로 보기" : "전체보기") + '</button>' +
+            '</div>' +
+            '<div class="lg-history-label">거래 내역</div>' +
             historyHtml +
           '</div>' +
         '</div>';
@@ -839,9 +875,16 @@
     const monthLabelEl = document.getElementById("histMonthLabel");
     const allToggleBtn = document.getElementById("histAllToggle");
     const sectionTitleEl = document.getElementById("histSectionTitle");
-    if (monthLabelEl) monthLabelEl.textContent = historyShowAll ? "전체" : formatMonthLabel(historyMonth);
-    if (allToggleBtn) allToggleBtn.classList.toggle("active", historyShowAll);
+    if (monthLabelEl) monthLabelEl.textContent = historyShowAll ? "전체 보는 중" : formatMonthLabel(historyMonth);
+    if (allToggleBtn) {
+      allToggleBtn.classList.toggle("active", historyShowAll);
+      allToggleBtn.textContent = historyShowAll ? "월별로 보기" : "전체보기";
+    }
     if (sectionTitleEl) sectionTitleEl.textContent = historyShowAll ? "전체 내역" : formatMonthLabel(historyMonth) + " 내역";
+    const prevBtnEl = document.getElementById("histPrevMonth");
+    const nextBtnEl = document.getElementById("histNextMonth");
+    if (prevBtnEl) prevBtnEl.disabled = historyShowAll;
+    if (nextBtnEl) nextBtnEl.disabled = historyShowAll;
 
     const all = (historyShowAll ? [...state.transactions] : state.transactions.filter((t) => t.date.slice(0, 7) === historyMonth))
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
@@ -908,10 +951,12 @@
         e.stopPropagation();
         const id = el.getAttribute("data-savetx");
         const date = document.getElementById("edit-date-" + id).value;
-        const amt = Number(document.getElementById("edit-amt-" + id).value);
+        const rawAmt = document.getElementById("edit-amt-" + id).value.trim();
         const memo = document.getElementById("edit-memo-" + id).value;
-        if (Number.isNaN(amt) || amt < 0) return;
-        editTransaction(id, date, amt, memo);
+        const amt = Number(rawAmt);
+        if (Number.isNaN(amt)) return;
+        const newType = rawAmt.startsWith("-") ? "out" : "in";
+        editTransaction(id, date, Math.abs(amt), memo, newType);
       };
     });
     document.querySelectorAll(".lg-tx-edit-input").forEach((el) => {
@@ -929,6 +974,37 @@
     });
     document.querySelectorAll("[data-remove]").forEach((el) => {
       el.onclick = () => { if (confirm(el.getAttribute("data-remove") + " 항목을 삭제할까요? 관련 거래 내역도 함께 삭제돼요.")) removeItem(el.getAttribute("data-remove")); };
+    });
+    document.querySelectorAll("[data-itemprevmonth]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-itemprevmonth");
+        const cur = itemHistoryMonth[item] || todayISO().slice(0, 7);
+        itemHistoryMonth[item] = shiftMonth(cur, -1);
+        itemHistoryShowAll[item] = false;
+        openItem = item;
+        render();
+      };
+    });
+    document.querySelectorAll("[data-itemnextmonth]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-itemnextmonth");
+        const cur = itemHistoryMonth[item] || todayISO().slice(0, 7);
+        itemHistoryMonth[item] = shiftMonth(cur, 1);
+        itemHistoryShowAll[item] = false;
+        openItem = item;
+        render();
+      };
+    });
+    document.querySelectorAll("[data-itemalltoggle]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-itemalltoggle");
+        itemHistoryShowAll[item] = !itemHistoryShowAll[item];
+        openItem = item;
+        render();
+      };
     });
     document.querySelectorAll("[data-editname]").forEach((el) => {
       el.onclick = () => { editingItemName = el.getAttribute("data-editname"); render(); };
