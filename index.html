@@ -372,6 +372,7 @@
       window.__lgSignOut = async () => {
         try { await signOut(auth); } catch (e) {}
         guestMode = false;
+        try { localStorage.removeItem(GUEST_CHOSEN_KEY); } catch (e) {}
         revealLoginScreen();
       };
       window.__lgSaveCloud = async (data) => {
@@ -389,6 +390,8 @@
       onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         if (user) {
+          const wasGuestWithData = guestMode && (state.items.length > 0 || state.transactions.length > 0);
+          const guestDataSnapshot = wasGuestWithData ? state : null;
           guestMode = false;
           const localCached = loadFromKey(cloudCacheKey(user.uid));
           try {
@@ -408,6 +411,13 @@
                 saveLocal();
                 setSyncNote("클라우드 데이터 불러옴");
               }
+            } else if (guestDataSnapshot) {
+              // 게스트 모드로 쓰던 중 로그인 - 그 데이터를 새 계정으로 이어서 사용
+              state = guestDataSnapshot;
+              state.updatedAt = Date.now();
+              saveLocal();
+              await window.__lgSaveCloud(state);
+              setSyncNote("게스트 모드 기록을 이 계정으로 옮겼어요");
             } else {
               state = localCached;
               await window.__lgSaveCloud(state);
@@ -418,7 +428,15 @@
           }
           revealAppScreen();
         } else if (!guestMode) {
-          revealLoginScreen();
+          let guestChosen = false;
+          try { guestChosen = localStorage.getItem(GUEST_CHOSEN_KEY) === "1"; } catch (e) {}
+          if (guestChosen) {
+            guestMode = true;
+            state = loadFromKey(GUEST_STORAGE_KEY);
+            revealAppScreen();
+          } else {
+            revealLoginScreen();
+          }
         }
         renderAccountPanel();
         render();
@@ -485,6 +503,7 @@
   document.getElementById("guestBtn").onclick = () => {
     guestMode = true;
     currentUser = null;
+    try { localStorage.setItem(GUEST_CHOSEN_KEY, "1"); } catch (e) {}
     state = loadFromKey(GUEST_STORAGE_KEY);
     showAppScreen();
     renderAccountPanel();
@@ -501,6 +520,7 @@
   // ===================== 가계부 앱 로직 =====================
   const PALETTE = ["#C08A2E","#2F6B4F","#3A4E8C","#52616B","#6B4E71","#2E7D82","#A8562E","#8C3A4E","#4E6B3A","#8A7C52"];
   const GUEST_STORAGE_KEY = "household-ledger-guest-v1";
+  const GUEST_CHOSEN_KEY = "household-ledger-guest-chosen";
 
   function cloudCacheKey(uid) { return "household-ledger-cloud-" + uid; }
 
