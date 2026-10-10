@@ -56,6 +56,30 @@
   .lg-account-email { font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; word-break: break-all; }
   .lg-account-mode { font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; }
   .lg-logout-btn, .lg-login-inline-btn { width: 100%; padding: 8px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .lg-delete-data-btn { width: 100%; margin-top: 8px; padding: 8px; border: 1px solid #A33A2E; background: #fff; color: #A33A2E; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .lg-modal-backdrop { position: fixed; inset: 0; background: rgba(31,42,68,0.55); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .lg-modal { background: var(--paper); border: 2px solid var(--ink); padding: 20px; width: 100%; max-width: 340px; }
+  .lg-modal-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 17px; margin-bottom: 10px; }
+  .lg-modal-text { font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+  .lg-modal-input { width: 100%; padding: 10px; border: 1px solid var(--ink); font-size: 14px; margin-bottom: 8px; background: #fff; box-sizing: border-box; }
+  .lg-modal-error { font-size: 12px; color: #A33A2E; min-height: 16px; margin-bottom: 8px; }
+  .lg-modal-row { display: flex; gap: 8px; }
+  .lg-modal-row button { flex: 1; padding: 10px; border: 1px solid var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; background: var(--paper); color: var(--ink); }
+  .lg-modal-row button.danger { background: #A33A2E; border-color: #A33A2E; color: #fff; }
+  .lg-modal-row button:disabled { opacity: 0.5; cursor: default; }
+  .lg-backup-btn { width: 100%; margin-top: 8px; padding: 8px; border: 1px solid var(--ink); background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .lg-guest-warn { border: 1px solid #C08A2E; background: #FBF1DC; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; line-height: 1.55; position: relative; }
+  .lg-guest-warn b { font-weight: 700; }
+  .lg-guest-warn-row { display: flex; gap: 6px; margin-top: 8px; }
+  .lg-guest-warn-row button { flex: 1; padding: 7px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .lg-guest-warn-close { position: absolute; top: 4px; right: 8px; border: none; background: none; font-size: 16px; color: var(--ink-soft); cursor: pointer; padding: 2px 4px; }
+  .lg-modal-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .lg-modal-actions button { padding: 11px; border: 1px solid var(--ink); background: #fff; color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; text-align: left; }
+  .lg-modal-actions small { display: block; font-weight: 400; font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .lg-range-row { display: flex; gap: 6px; margin: 8px 0 10px; }
+  .lg-range-chip { flex: 1; padding: 7px 0; border: 1px solid var(--paper-line); background: #fff; color: var(--ink-soft); font-size: 12px; cursor: pointer; }
+  .lg-range-chip.active { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 700; }
+  .lg-modal-select { width: 100%; padding: 10px; border: 1px solid var(--ink); font-size: 13px; background: #fff; margin-bottom: 10px; box-sizing: border-box; }
   .lg-sync-note { font-size: 11px; color: var(--ink-soft); text-align: right; margin-bottom: 14px; min-height: 14px; }
 
   /* ---------- 상단 액션(저장/실행취소) ---------- */
@@ -235,6 +259,44 @@
         <div class="lg-account-mode" id="accountMode"></div>
         <button class="lg-logout-btn hidden" id="logoutBtn">로그아웃</button>
         <button class="lg-login-inline-btn hidden" id="loginBtnInline">구글로 로그인</button>
+        <button class="lg-backup-btn" id="backupOpenBtn">백업 · 내보내기</button>
+        <button class="lg-delete-data-btn hidden" id="deleteDataBtn">내 정보 모두 삭제</button>
+      </div>
+    </div>
+    <div id="deleteModal" class="lg-modal-backdrop hidden">
+      <div class="lg-modal">
+        <div class="lg-modal-title">내 정보 모두 삭제</div>
+        <div class="lg-modal-text">이 계정에 저장된 가계부 기록과 로그인 정보가 모두 삭제되며, 되돌릴 수 없습니다.<br/>계속하려면 아래에 <b>삭제</b>를 입력해주세요.</div>
+        <input class="lg-modal-input" id="deleteConfirmInput" type="text" placeholder="삭제" autocomplete="off" />
+        <div class="lg-modal-error" id="deleteError"></div>
+        <div class="lg-modal-row">
+          <button id="deleteCancelBtn">취소</button>
+          <button id="deleteConfirmBtn" class="danger" disabled>삭제하기</button>
+        </div>
+      </div>
+    </div>
+    <div id="backupModal" class="lg-modal-backdrop hidden">
+      <div class="lg-modal">
+        <div class="lg-modal-title">백업 · 내보내기</div>
+        <div class="lg-modal-text">기록을 파일로 저장해두면 앱을 지우거나 기기를 바꿔도 다시 불러올 수 있어요.</div>
+        <div class="lg-modal-text" style="margin-bottom:6px;">엑셀 내보내기 기간</div>
+        <select id="exportRange" class="lg-modal-select"></select>
+        <div class="lg-modal-actions">
+          <button id="backupJsonBtn">백업 파일 저장<small>항상 전체 기록이 저장돼요. 나중에 그대로 복원할 수 있어요 (.json)</small></button>
+          <button id="backupCsvBtn">엑셀용으로 내보내기<small>위에서 고른 기간의 내역을 표로 저장해요 (.csv)</small></button>
+          <button id="backupRestoreBtn">백업 파일에서 복원<small>현재 기록이 파일 내용으로 바뀌어요</small></button>
+        </div>
+        <input type="file" id="backupFileInput" accept=".json,application/json" class="hidden" />
+        <div class="lg-modal-error" id="backupMsg"></div>
+        <div class="lg-modal-row"><button id="backupCloseBtn">닫기</button></div>
+      </div>
+    </div>
+    <div id="guestWarn" class="lg-guest-warn hidden">
+      <button class="lg-guest-warn-close" id="guestWarnClose" aria-label="닫기">×</button>
+      <b>게스트 모드예요.</b> 기록이 이 기기에만 저장되어, 앱을 삭제하거나 기기를 바꾸면 사라져요. 구글 로그인을 하거나 백업 파일을 저장해두세요.
+      <div class="lg-guest-warn-row">
+        <button id="guestWarnBackup">백업하기</button>
+        <button id="guestWarnLogin">구글로 로그인</button>
       </div>
     </div>
     <div id="syncNote" class="lg-sync-note"></div>
@@ -285,6 +347,7 @@
           <button id="histNextMonth" class="lg-hist-nav-btn">›</button>
           <button id="histAllToggle" class="lg-hist-all-btn">전체보기</button>
         </div>
+        <div id="histRangeRow" class="lg-range-row hidden"></div>
         <div class="lg-section-title" id="histSectionTitle">전체 내역</div>
         <div class="lg-summary-grid">
           <div class="lg-stamp"><div class="lg-stamp-label">총 입금</div><div id="totalIn" class="lg-stamp-value income">0원</div></div>
@@ -345,14 +408,15 @@
     appId: "1:164386253226:web:80e09a37666961e3e2a3d3",
   };
 
-  let auth = null, db = null, currentUser = null, firebaseReady = false, guestMode = false;
+  let guestWarnDismissed = false;
+  let auth = null, db = null, currentUser = null, firebaseReady = false, guestMode = false, deletingAccount = false;
 
   async function initFirebase() {
     try {
       const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-      const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } =
+      const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, deleteUser, reauthenticateWithPopup } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-      const { getFirestore, doc, getDoc, setDoc } =
+      const { getFirestore, doc, getDoc, setDoc, deleteDoc } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
 
       const app = initializeApp(firebaseConfig);
@@ -375,8 +439,36 @@
         try { localStorage.removeItem(GUEST_CHOSEN_KEY); } catch (e) {}
         revealLoginScreen();
       };
+      window.__lgDeleteAll = async () => {
+        const user = auth.currentUser;
+        if (!user) throw new Error("no-user");
+        const uid = user.uid;
+        deletingAccount = true; // 삭제 중에는 클라우드 저장이 다시 일어나지 않게 막음
+        try {
+          await deleteDoc(doc(db, "ledgers", uid));
+          try {
+            await deleteUser(user);
+          } catch (e) {
+            if (e && e.code === "auth/requires-recent-login") {
+              await reauthenticateWithPopup(user, new GoogleAuthProvider());
+              await deleteUser(user);
+            } else {
+              throw e;
+            }
+          }
+        } catch (e) {
+          deletingAccount = false;
+          throw e;
+        }
+        try { localStorage.removeItem(cloudCacheKey(uid)); } catch (e) {}
+        try { localStorage.removeItem(GUEST_CHOSEN_KEY); } catch (e) {}
+        state = { items: [], transactions: [] };
+        guestMode = false;
+        deletingAccount = false;
+        revealLoginScreen();
+      };
       window.__lgSaveCloud = async (data) => {
-        if (!currentUser) return false;
+        if (!currentUser || deletingAccount) return false;
         try {
           await setDoc(doc(db, "ledgers", currentUser.uid), data);
           setSyncNote("클라우드에 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
@@ -390,6 +482,7 @@
       onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         if (user) {
+          try { localStorage.removeItem(GUEST_CHOSEN_KEY); } catch (e) {}
           const wasGuestWithData = guestMode && (state.items.length > 0 || state.transactions.length > 0);
           const guestDataSnapshot = wasGuestWithData ? state : null;
           guestMode = false;
@@ -442,10 +535,29 @@
         render();
       });
     } catch (e) {
+      if (enterGuestIfChosen()) return;
       revealLoginScreen();
       document.getElementById("loginError").textContent = "구글 로그인 연결에 실패했어요. '로그인 없이 사용하기'를 이용해주세요.";
     }
   }
+
+  // 게스트를 선택했던 사용자는 인터넷/로그인 모듈 없이도 바로 입장
+  function enterGuestIfChosen() {
+    let chosen = false;
+    try { chosen = localStorage.getItem(GUEST_CHOSEN_KEY) === "1"; } catch (e) {}
+    if (!chosen || currentUser) return false;
+    guestMode = true;
+    state = loadFromKey(GUEST_STORAGE_KEY);
+    revealAppScreen();
+    renderAccountPanel();
+    render();
+    return true;
+  }
+  // 네트워크가 멈춰서 로그인 모듈이 오래 안 올 때 스플래시에 갇히지 않게 함
+  setTimeout(() => {
+    if (pendingAuthDecision) return;
+    if (!enterGuestIfChosen()) revealLoginScreen();
+  }, 5000);
 
   let splashElapsed = false;
   let pendingAuthDecision = null;
@@ -486,6 +598,8 @@
       emailEl.textContent = currentUser.email || "";
       modeEl.textContent = "구글 계정으로 로그인됨";
       logoutBtn.classList.remove("hidden");
+      document.getElementById("deleteDataBtn").classList.remove("hidden");
+      document.getElementById("guestWarn").classList.add("hidden");
       loginInlineBtn.classList.add("hidden");
       accountBtn.innerHTML = currentUser.photoURL ? '<img src="' + currentUser.photoURL + '" />' : "👤";
     } else {
@@ -493,12 +607,17 @@
       emailEl.textContent = "";
       modeEl.textContent = "이 기기에만 데이터가 저장돼요";
       logoutBtn.classList.add("hidden");
+      document.getElementById("deleteDataBtn").classList.add("hidden");
+      document.getElementById("guestWarn").classList.toggle("hidden", guestWarnDismissed);
       loginInlineBtn.classList.remove("hidden");
       accountBtn.innerHTML = "👤";
     }
   }
 
-  document.getElementById("loginBtnMain").onclick = () => window.__lgSignIn && window.__lgSignIn();
+  document.getElementById("loginBtnMain").onclick = () => {
+    if (window.__lgSignIn) window.__lgSignIn();
+    else document.getElementById("loginError").textContent = "로그인 모듈을 불러오는 중이에요. 인터넷 연결을 확인하고 잠시 후 다시 눌러주세요.";
+  };
   document.getElementById("loginBtnInline").onclick = () => window.__lgSignIn && window.__lgSignIn();
   document.getElementById("guestBtn").onclick = () => {
     guestMode = true;
@@ -511,6 +630,159 @@
   };
   document.getElementById("logoutBtn").onclick = () => window.__lgSignOut && window.__lgSignOut();
   document.getElementById("accountBtn").onclick = () => document.getElementById("accountPanel").classList.toggle("show");
+
+  // 내 정보 모두 삭제 (확인창)
+  const deleteModal = document.getElementById("deleteModal");
+  const deleteInput = document.getElementById("deleteConfirmInput");
+  const deleteConfirmBtn = document.getElementById("deleteConfirmBtn");
+  const deleteCancelBtn = document.getElementById("deleteCancelBtn");
+  const deleteError = document.getElementById("deleteError");
+  document.getElementById("deleteDataBtn").onclick = () => {
+    document.getElementById("accountPanel").classList.remove("show");
+    deleteInput.value = "";
+    deleteError.textContent = "";
+    deleteConfirmBtn.disabled = true;
+    deleteModal.classList.remove("hidden");
+    deleteInput.focus();
+  };
+  deleteInput.addEventListener("input", () => {
+    deleteConfirmBtn.disabled = deleteInput.value.trim() !== "삭제";
+  });
+  deleteCancelBtn.onclick = () => deleteModal.classList.add("hidden");
+  deleteConfirmBtn.onclick = async () => {
+    if (deleteInput.value.trim() !== "삭제" || !window.__lgDeleteAll) return;
+    deleteConfirmBtn.disabled = true;
+    deleteCancelBtn.disabled = true;
+    deleteError.textContent = "삭제 중이에요...";
+    try {
+      await window.__lgDeleteAll();
+      deleteModal.classList.add("hidden");
+      alert("저장된 정보가 모두 삭제되었어요.");
+    } catch (e) {
+      const code = e && e.code ? e.code : "오류";
+      deleteError.textContent = "삭제에 실패했어요 (" + code + "). 네트워크를 확인하고 다시 시도해주세요.";
+      deleteConfirmBtn.disabled = false;
+    }
+    deleteCancelBtn.disabled = false;
+  };
+
+  // ===================== 백업 / 내보내기 / 복원 =====================
+  const backupModal = document.getElementById("backupModal");
+  const backupMsg = document.getElementById("backupMsg");
+  const backupFileInput = document.getElementById("backupFileInput");
+  function openBackupModal() {
+    document.getElementById("accountPanel").classList.remove("show");
+    backupMsg.style.color = "";
+    backupMsg.textContent = "";
+    fillExportRange();
+    backupModal.classList.remove("hidden");
+  }
+  function backupNote(text, ok) {
+    backupMsg.style.color = ok ? "#2F6B4F" : "";
+    backupMsg.textContent = text;
+  }
+  async function saveFileToDevice(filename, mime, content) {
+    const blob = new Blob([content], { type: mime + ";charset=utf-8" });
+    // 폰에서는 공유 시트(드라이브·파일 저장 등)가 가장 확실해서 먼저 시도
+    try {
+      const file = new File([blob], filename, { type: mime });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+        return true;
+      }
+    } catch (e) {
+      if (e && e.name === "AbortError") return false; // 사용자가 취소
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    return true;
+  }
+  function csvCell(v) {
+    let t = v == null ? "" : String(v);
+    if (/^[=+\-@\t\r]/.test(t) && isNaN(Number(t))) t = "'" + t; // 엑셀 수식 실행 방지
+    return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  }
+  function csvDelta(t) { return t.type === "in" ? t.amount : t.type === "out" ? -t.amount : t.amount; }
+  // sel: "all" | "3" | "6" | "12" | "month:YYYY-MM"
+  function buildCsv(sel) {
+    let startMonth = null, onlyMonth = null;
+    if (typeof sel === "string" && sel.indexOf("month:") === 0) { onlyMonth = sel.slice(6); startMonth = onlyMonth; }
+    else if (Number(sel) > 0) startMonth = shiftMonth(todayISO().slice(0, 7), -(Number(sel) - 1));
+    const inRange = (t) => { const m = t.date.slice(0, 7); return (!startMonth || m >= startMonth) && (!onlyMonth || m === onlyMonth); };
+    const rows = [["날짜", "항목", "구분", "내용", "금액"]];
+    for (const it of state.items) {
+      let opening = it.initialBalance || 0;
+      if (startMonth) for (const t of state.transactions) if (t.item === it.name && t.date.slice(0, 7) < startMonth) opening += csvDelta(t);
+      if (opening) rows.push([startMonth ? startMonth + "-01" : "", it.name, startMonth ? "이월" : "시작 잔액", "", opening]);
+    }
+    const sorted = state.transactions.filter(inRange).sort((a, b) => (a.date + (a.createdAt || 0)).localeCompare(b.date + (b.createdAt || 0)));
+    for (const t of sorted) {
+      const label = t.type === "in" ? "입금" : t.type === "out" ? "출금" : "설정";
+      const signed = t.type === "out" ? -t.amount : t.amount;
+      rows.push([t.date, t.item, label, t.memo || "", signed]);
+    }
+    return { text: "\uFEFF" + rows.map((r) => r.map(csvCell).join(",")).join("\r\n"), count: sorted.length };
+  }
+  function fillExportRange() {
+    const sel = document.getElementById("exportRange");
+    const opts = [["month:" + historyMonth, "보고 있는 월 (" + formatMonthLabel(historyMonth) + ")"], ["3", "최근 3개월"], ["6", "최근 6개월"], ["12", "최근 1년"], ["all", "전체"]];
+    sel.innerHTML = opts.map(([v, l]) => '<option value="' + v + '">' + l + '</option>').join("");
+    sel.value = historyShowAll ? (historyRange === 0 ? "all" : String(historyRange)) : "month:" + historyMonth;
+  }
+  function stamp() { return todayISO(); }
+  document.getElementById("backupOpenBtn").onclick = openBackupModal;
+  document.getElementById("guestWarnBackup").onclick = openBackupModal;
+  document.getElementById("guestWarnLogin").onclick = () => window.__lgSignIn && window.__lgSignIn();
+  document.getElementById("guestWarnClose").onclick = () => { guestWarnDismissed = true; document.getElementById("guestWarn").classList.add("hidden"); };
+  document.getElementById("backupCloseBtn").onclick = () => backupModal.classList.add("hidden");
+  document.getElementById("backupJsonBtn").onclick = async () => {
+    const payload = { app: "household-ledger", version: 1, exportedAt: new Date().toISOString(), items: state.items, transactions: state.transactions };
+    const ok = await saveFileToDevice("잔액관리가계부_백업_" + stamp() + ".json", "application/json", JSON.stringify(payload, null, 2));
+    if (ok) backupNote("백업 파일을 만들었어요. 안전한 곳(드라이브 등)에 보관해두세요.", true);
+  };
+  document.getElementById("backupCsvBtn").onclick = async () => {
+    if (!state.transactions.length && !state.items.length) { backupNote("내보낼 기록이 아직 없어요."); return; }
+    const selEl = document.getElementById("exportRange");
+    const sel = selEl.value;
+    const csv = buildCsv(sel);
+    const tag = selEl.options[selEl.selectedIndex].text.replace(/[\s()]/g, "");
+    const ok = await saveFileToDevice("잔액관리가계부_" + tag + "_" + stamp() + ".csv", "text/csv", csv.text);
+    if (ok) backupNote("엑셀용 파일을 만들었어요. (내역 " + csv.count + "건)", true);
+  };
+  document.getElementById("backupRestoreBtn").onclick = () => { backupFileInput.value = ""; backupFileInput.click(); };
+  function sanitizeBackup(raw) {
+    if (!raw || raw.app !== "household-ledger" || !Array.isArray(raw.items) || !Array.isArray(raw.transactions)) return null;
+    const items = [], names = new Set();
+    for (const it of raw.items) {
+      if (!it || typeof it.name !== "string" || !it.name.trim() || names.has(it.name)) continue;
+      names.add(it.name);
+      items.push({ name: it.name, initialBalance: Number.isFinite(it.initialBalance) ? it.initialBalance : 0, color: typeof it.color === "string" ? it.color : PALETTE[items.length % PALETTE.length] });
+    }
+    const txs = [];
+    for (const t of raw.transactions) {
+      if (!t || typeof t.item !== "string" || !["in", "out", "adjust"].includes(t.type) || !Number.isFinite(t.amount) || !/^\d{4}-\d{2}-\d{2}$/.test(t.date || "")) continue;
+      if (!names.has(t.item)) { names.add(t.item); items.push({ name: t.item, initialBalance: 0, color: PALETTE[items.length % PALETTE.length] }); }
+      txs.push({ id: typeof t.id === "string" ? t.id : makeId(), item: t.item, type: t.type, amount: t.amount, memo: typeof t.memo === "string" ? t.memo.slice(0, 20) : "", date: t.date, createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now() });
+    }
+    return { items, transactions: txs };
+  }
+  backupFileInput.onchange = async () => {
+    const file = backupFileInput.files && backupFileInput.files[0];
+    if (!file) return;
+    let data = null;
+    try { data = sanitizeBackup(JSON.parse(await file.text())); } catch (e) {}
+    if (!data) { backupNote("이 앱에서 만든 백업 파일이 아니에요. 파일을 다시 확인해주세요."); return; }
+    const msg = "항목 " + data.items.length + "개, 내역 " + data.transactions.length + "건을 불러와요.\n현재 기록은 모두 이 내용으로 바뀝니다. 계속할까요?";
+    if (!window.confirm(msg)) return;
+    state = { items: data.items, transactions: data.transactions };
+    openItem = null; editingTxId = null; editingItemName = null;
+    await saveState();
+    render();
+    backupNote("복원했어요. (항목 " + data.items.length + "개, 내역 " + data.transactions.length + "건)", true);
+  };
   document.addEventListener("click", (e) => {
     const panel = document.getElementById("accountPanel");
     const btn = document.getElementById("accountBtn");
@@ -547,6 +819,14 @@
   let activeTab = "items";
   let historyMonth = todayISO().slice(0, 7);
   let historyShowAll = false;
+  let historyRange = 3;            // 전체보기 기간(개월), 0 = 전체
+  let itemHistoryRange = {};
+  function rangeStartMonth(months) { return months > 0 ? shiftMonth(todayISO().slice(0, 7), -(months - 1)) : null; }
+  function rangeLabel(months) { return months === 0 ? "전체" : months === 12 ? "최근 1년" : "최근 " + months + "개월"; }
+  function rangeChipsHtml(cur, attrs) {
+    return [[3, "3개월"], [6, "6개월"], [12, "1년"], [0, "전체"]].map(([m, label]) =>
+      '<button class="lg-range-chip' + (cur === m ? " active" : "") + '" ' + attrs + ' data-months="' + m + '">' + label + '</button>').join("");
+  }
 
   function saveLocal() {
     const key = currentUser ? cloudCacheKey(currentUser.uid) : GUEST_STORAGE_KEY;
@@ -839,10 +1119,12 @@
         const isOpen = openItem === item;
         const itemSelMonth = itemHistoryMonth[item] || todayISO().slice(0, 7);
         const itemShowAll = !!itemHistoryShowAll[item];
-        const groups = itemShowAll ? buildMonthGroups(item) : [buildSingleMonthGroup(item, itemSelMonth)];
+        const itemRange = itemHistoryRange[item] === undefined ? 3 : itemHistoryRange[item];
+        let groups = itemShowAll ? buildMonthGroups(item) : [buildSingleMonthGroup(item, itemSelMonth)];
+        if (itemShowAll && itemRange > 0) { const sm = rangeStartMonth(itemRange); groups = groups.filter((g) => g.month >= sm); }
 
         const historyHtml = (itemShowAll && groups.length === 0)
-          ? '<div class="lg-empty-tx">아직 기록이 없어요.</div>'
+          ? '<div class="lg-empty-tx">' + (itemRange > 0 ? "이 기간에 기록이 없어요." : "아직 기록이 없어요.") + '</div>'
           : groups.map((g) => {
               const txHtml = g.txs.map((t) => {
                 const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
@@ -880,10 +1162,11 @@
           '<div class="lg-item-body">' +
             '<div class="lg-hist-month-nav lg-item-month-nav">' +
               '<button class="lg-hist-nav-btn" data-itemprevmonth="' + esc(item) + '"' + (itemShowAll ? ' disabled' : '') + '>‹</button>' +
-              '<span class="lg-hist-month-label">' + (itemShowAll ? "전체 보는 중" : formatMonthLabel(itemSelMonth)) + '</span>' +
+              '<span class="lg-hist-month-label">' + (itemShowAll ? rangeLabel(itemRange) : formatMonthLabel(itemSelMonth)) + '</span>' +
               '<button class="lg-hist-nav-btn" data-itemnextmonth="' + esc(item) + '"' + (itemShowAll ? ' disabled' : '') + '>›</button>' +
               '<button class="lg-hist-all-btn' + (itemShowAll ? ' active' : '') + '" data-itemalltoggle="' + esc(item) + '">' + (itemShowAll ? "월별로 보기" : "전체보기") + '</button>' +
             '</div>' +
+            (itemShowAll ? '<div class="lg-range-row">' + rangeChipsHtml(itemRange, 'data-itemrange="' + esc(item) + '"') + '</div>' : '') +
             '<div class="lg-history-label">거래 내역</div>' +
             historyHtml +
           '</div>' +
@@ -895,18 +1178,27 @@
     const monthLabelEl = document.getElementById("histMonthLabel");
     const allToggleBtn = document.getElementById("histAllToggle");
     const sectionTitleEl = document.getElementById("histSectionTitle");
-    if (monthLabelEl) monthLabelEl.textContent = historyShowAll ? "전체 보는 중" : formatMonthLabel(historyMonth);
+    if (monthLabelEl) monthLabelEl.textContent = historyShowAll ? rangeLabel(historyRange) : formatMonthLabel(historyMonth);
     if (allToggleBtn) {
       allToggleBtn.classList.toggle("active", historyShowAll);
       allToggleBtn.textContent = historyShowAll ? "월별로 보기" : "전체보기";
     }
-    if (sectionTitleEl) sectionTitleEl.textContent = historyShowAll ? "전체 내역" : formatMonthLabel(historyMonth) + " 내역";
+    if (sectionTitleEl) sectionTitleEl.textContent = historyShowAll ? (historyRange > 0 ? rangeLabel(historyRange) + " 내역" : "전체 내역") : formatMonthLabel(historyMonth) + " 내역";
+    const rangeRowEl = document.getElementById("histRangeRow");
+    if (rangeRowEl) {
+      rangeRowEl.classList.toggle("hidden", !historyShowAll);
+      rangeRowEl.innerHTML = historyShowAll ? rangeChipsHtml(historyRange, 'data-histrange="1"') : "";
+      rangeRowEl.querySelectorAll("[data-histrange]").forEach((el) => {
+        el.onclick = () => { historyRange = Number(el.getAttribute("data-months")); render(); };
+      });
+    }
     const prevBtnEl = document.getElementById("histPrevMonth");
     const nextBtnEl = document.getElementById("histNextMonth");
     if (prevBtnEl) prevBtnEl.disabled = historyShowAll;
     if (nextBtnEl) nextBtnEl.disabled = historyShowAll;
 
-    const all = (historyShowAll ? [...state.transactions] : state.transactions.filter((t) => t.date.slice(0, 7) === historyMonth))
+    const histStart = historyShowAll ? rangeStartMonth(historyRange) : null;
+    const all = (historyShowAll ? state.transactions.filter((t) => !histStart || t.date.slice(0, 7) >= histStart) : state.transactions.filter((t) => t.date.slice(0, 7) === historyMonth))
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
     const totalIn = all.filter((t) => t.type === "in").reduce((s, t) => s + t.amount, 0);
     const totalOut = all.filter((t) => t.type === "out").reduce((s, t) => s + t.amount, 0);
@@ -1022,6 +1314,15 @@
         e.stopPropagation();
         const item = el.getAttribute("data-itemalltoggle");
         itemHistoryShowAll[item] = !itemHistoryShowAll[item];
+        openItem = item;
+        render();
+      };
+    });
+    document.querySelectorAll("[data-itemrange]").forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const item = el.getAttribute("data-itemrange");
+        itemHistoryRange[item] = Number(el.getAttribute("data-months"));
         openItem = item;
         render();
       };
