@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <title>잔액 관리 가계부</title>
-<meta name="color-scheme" content="only light" />
+<meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#1F2A44" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -17,7 +17,7 @@
     var t=pref==="dark"?"dark":"light";
     document.documentElement.setAttribute("data-theme",t);
     var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",t==="dark"?"#0E1118":"#1F2A44");
-    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content",t==="dark"?"dark":"only light");
+    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content","light dark");
   };
   window.__lgApplyTheme(window.__lgThemePref());
 })();
@@ -34,7 +34,7 @@
     --surface: #fff; --glass6: rgba(247,244,236,0.6); --glass5: rgba(247,244,236,0.5);
     --danger: #A33A2E; --warn-bg: #FBF1DC; --overlay: rgba(31,42,68,0.55); --shadow: rgba(31,42,68,0.15);
     --on-stamp: #fff; --on-tag: #fff;
-    color-scheme: only light;
+    color-scheme: light dark;
   }
   :root[data-theme="dark"] {
     --paper: #151922; --paper-line: #2A3142; --ink: #E9E3D3; --ink-soft: #98A1B3;
@@ -44,6 +44,9 @@
     --on-stamp: #1A1608; --on-tag: #10131A;
     color-scheme: dark;
   }
+  input, select, textarea { color: var(--ink); background-color: var(--surface); }
+  :root[data-theme="light"] select, :root[data-theme="light"] input { color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root[data-theme="light"] { --lg-dark-aware: 1; } }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink);
     font-family: 'Noto Sans KR', -apple-system, 'Malgun Gothic', sans-serif; min-height: 100%; }
