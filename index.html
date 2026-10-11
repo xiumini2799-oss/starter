@@ -12,7 +12,7 @@
 <script>
 (function(){
   var KEY="household-ledger-theme";
-  window.__lgThemePref=function(){var v="light";try{v=localStorage.getItem(KEY)||"light";}catch(e){}return v==="dark"?"dark":"light";};
+  window.__lgThemePref=function(){return "dark";}; /* 현재는 남색 고정. 이후 업데이트에서 색 조합 선택 추가 예정 */
   window.__lgApplyTheme=function(pref){
     var t=pref==="dark"?"dark":"light";
     document.documentElement.setAttribute("data-theme",t);
@@ -36,27 +36,6 @@
     --on-stamp: #fff; --on-tag: #fff; --danger-bg: #A33A2E; --on-danger: #fff;
     color-scheme: dark;
   }
-  :root[data-theme="light"] {
-    /* 베이지: 크롬의 '웹 콘텐츠 어둡게 표시'가 켜져 있어도 같은 색으로 보이도록 색을 미리 뒤집어 두고 화면 전체를 한 번 되돌림 */
-    --paper: #0e0b03;
-    --paper-line: #2d250f;
-    --ink: #cbd6f0;
-    --ink-soft: #878e9c;
-    --red-ink: #ff9a95;
-    --green-ink: #76b296;
-    --stamp: #a16b0f;
-    --surface: #000000;
-    --danger: #ff9a8e;
-    --warn-bg: #170d00;
-    --on-stamp: #000000;
-    --on-tag: #000000;
-    --danger-bg: #ff9a8e;
-    --on-danger: #000000;
-    --glass6: rgba(14,11,3,0.6); --glass5: rgba(14,11,3,0.5);
-    --overlay: rgba(203,214,240,0.55); --shadow: rgba(203,214,240,0.15);
-    filter: invert(1) hue-rotate(180deg);
-  }
-  :root[data-theme="light"] img { filter: hue-rotate(180deg) invert(1); }
   :root[data-theme="dark"] {
     --paper: #151922; --paper-line: #2A3142; --ink: #E9E3D3; --ink-soft: #98A1B3;
     --red-ink: #F2958A; --green-ink: #7FD0A6; --stamp: #E2B35C;
@@ -314,12 +293,6 @@
         <div class="lg-account-mode" id="accountMode"></div>
         <button class="lg-logout-btn hidden" id="logoutBtn">로그아웃</button>
         <button class="lg-login-inline-btn hidden" id="loginBtnInline">구글로 로그인</button>
-        <div class="lg-theme-label">화면 색상</div>
-        <div class="lg-theme-row" id="themeRow">
-          <button class="lg-theme-chip" data-theme-pref="light">베이지</button>
-          <button class="lg-theme-chip" data-theme-pref="dark">남색</button>
-        </div>
-        <div class="lg-theme-label" id="buildStamp" style="margin:0 0 8px;opacity:.7"></div>
         <button class="lg-backup-btn" id="backupOpenBtn">백업 · 내보내기</button>
         <button class="lg-delete-data-btn hidden" id="deleteDataBtn">내 정보 모두 삭제</button>
       </div>
@@ -699,9 +672,7 @@
     if(document.documentElement.getAttribute("data-theme")==="dark"){
       const mix=(v)=>Math.round(v+(255-v)*0.45); return "rgb("+mix(r)+","+mix(g)+","+mix(b)+")";
     }
-    // 베이지: 화면 전체 필터(invert+hue-rotate)의 역변환을 미리 적용
-    const T=[r/255,g/255,b/255], HI=[[-0.574,1.43,0.144],[0.426,0.43,0.144],[0.426,1.43,-0.856]];
-    return "rgb("+HI.map((row)=>Math.round(Math.min(1,Math.max(0,1-(row[0]*T[0]+row[1]*T[1]+row[2]*T[2])))*255)).join(",")+")";
+    return c;
   }
   function syncThemeChips(){
     const pref=window.__lgThemePref();
@@ -716,7 +687,6 @@
     };
   });
   syncThemeChips();
-  document.getElementById("buildStamp").textContent = "앱 버전 v58 · 색상 " + document.documentElement.getAttribute("data-theme");
 
   // 내 정보 모두 삭제 (확인창)
   const deleteModal = document.getElementById("deleteModal");
