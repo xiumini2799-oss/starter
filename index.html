@@ -1164,14 +1164,14 @@
   }
 
   function ratioDonutSrc(inPct) {
-    var dark = document.documentElement.getAttribute("data-theme") === "dark" || (function () { try { return window.matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) { return false; } })();
+    var dark = true; /* 화이트/블랙 모두 같은 색 */
     var g = dark ? "#7FD0A6" : "#2F6B4F", r = dark ? "#F2958A" : "#A8342F", C = 157.08, a = Math.max(0, Math.min(100, inPct)) / 100 * C;
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><g transform="rotate(-90 30 30)" fill="none" stroke-width="10"><circle cx="30" cy="30" r="25" stroke="' + r + '"/><circle cx="30" cy="30" r="25" stroke="' + g + '" stroke-dasharray="' + a + ' ' + C + '"/></g></svg>';
     return "data:image/svg+xml," + encodeURIComponent(svg);
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v70";
+  var LG_VERSION = "v72";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1203,7 +1203,7 @@
       });
     }, 300);
   })();
-function lgForcedDark(){ try{ return document.documentElement.getAttribute("data-theme")!=="dark" && window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; } }
+function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(화이트/블랙) 그대로 */
   function dcc(c){ return dc(c, lgForcedDark()); }
   function dc(c,f){
     if(!/^#[0-9a-fA-F]{6}$/.test(c||"")) return c;
