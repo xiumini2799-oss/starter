@@ -493,6 +493,15 @@
   .lg-guide-go { margin-top: 16px; width: 100%; padding: 14px; border: none; border-radius: 14px; background: var(--ink); color: var(--surface); font-size: 15px; font-weight: 700; cursor: pointer; }
 
   .lg-kb #itemList { padding-bottom: 45vh; }
+
+  .lg-item-dot.lg-keycap::before, .lg-item-dot.lg-keycap::after { content: none !important; display: none !important; }
+  .lg-kc-svg { display: block; overflow: visible; filter: drop-shadow(0 2px 2.5px rgba(20,16,10,.28)); pointer-events: none; }
+  .lg-kc-svg .kf { transition: transform .06s ease; }
+  .lg-item-dot.lg-keycap:active .kf, .lg-item-dot.lg-keycap.sel .kf { transform: translateY(1.5px); }
+  .lg-table-tag.lg-tag-svg { position: relative; display: inline-block; background: transparent !important; }
+  .lg-tag-bg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .lg-tag-tx { position: relative; }
+  .lg-mdot { display: inline-block; vertical-align: middle; margin-right: 6px; }
 </style>
 </head>
 <body>
@@ -1090,8 +1099,12 @@
       var k = e.target.closest("[data-key]"); if (!k) return;
       e.stopPropagation(); e.preventDefault();
       var name = k.getAttribute("data-key");
+      var keep = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("lg-bubble-input");
+      if (keep) { var px = document.getElementById("lgFocusProxy"); if (!px) { px = document.createElement("input"); px.id = "lgFocusProxy"; px.setAttribute("aria-hidden", "true"); px.tabIndex = -1; px.style.cssText = "position:fixed;left:0;top:50%;width:1px;height:1px;opacity:0;border:0;padding:0;font-size:16px;pointer-events:none"; document.body.appendChild(px); } try { px.focus({ preventScroll: true }); } catch (e) {} }
+      var top0 = k.getBoundingClientRect().top;
       if (selectedItem === name) { selectedItem = null; } else { selectedItem = name; bubbleDraft = ""; bubbleFresh = true; }
       applySelectionUI();
+      var dy = k.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy);
     }, true);
     list.addEventListener("click", function (e) {
       if (e.target.closest(".lg-bubble-add")) { e.stopPropagation(); submitBubble(); }
@@ -1133,8 +1146,25 @@
   }
 
 
+  /* 키캡/태그를 SVG로 그려서 브라우저 자동 다크 변환에 색이 눌리지 않게 한다 */
+  var kcN = 0;
+  function kcRgb(c) {
+    var m = String(c).match(/\d+/g);
+    if (/^#/.test(c)) { var n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+    return m ? [+m[0], +m[1], +m[2]] : [128, 128, 128];
+  }
+  function kcMix(rgb, to, t) { return "rgb(" + rgb.map(function (v, i) { return Math.round(v + (to[i] - v) * t); }).join(",") + ")"; }
+  function kcSvg(color) {
+    var c = kcRgb(color), id = "kc" + (++kcN), K = [0, 0, 0], W = [255, 255, 255];
+    return '<svg class="lg-kc-svg" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">' +
+      '<defs><linearGradient id="' + id + 'b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + kcMix(c, K, .2) + '"/><stop offset="1" stop-color="' + kcMix(c, K, .38) + '"/></linearGradient>' +
+      '<linearGradient id="' + id + 'f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + kcMix(c, W, .18) + '"/><stop offset=".55" stop-color="' + kcMix(c, W, 0) + '"/><stop offset="1" stop-color="' + kcMix(c, K, .07) + '"/></linearGradient></defs>' +
+      '<rect class="kb" x="0" y="3" width="32" height="29" rx="8" fill="url(#' + id + 'b)"/>' +
+      '<g class="kf"><rect x="3" y="0" width="26" height="23" rx="7" fill="url(#' + id + 'f)"/><rect x="3.5" y="0.5" width="25" height="22" rx="6.5" fill="none" stroke="rgba(255,255,255,.22)"/></g></svg>';
+  }
+
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v68";
+  var LG_VERSION = "v69";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1648,7 +1678,7 @@ function dc(c){
           '<button class="lg-manage-del" data-cancelrename="' + esc(it.name) + '">취소</button>' +
         '</div>';
       }
-      return '<div class="lg-manage-row"><span><span class="lg-item-dot" style="display:inline-block;background:' + dc(it.color) + '"></span>' + esc(it.name) + '</span>' +
+      return '<div class="lg-manage-row"><span><svg class="lg-mdot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect width="12" height="12" rx="4" fill="' + dc(it.color) + '"/></svg>' + esc(it.name) + '</span>' +
         '<span class="lg-manage-row-btns">' +
           '<button class="lg-manage-edit" data-editname="' + esc(it.name) + '">수정</button>' +
           '<button class="lg-manage-del" data-remove="' + esc(it.name) + '">삭제</button>' +
@@ -1701,7 +1731,7 @@ function dc(c){
 
         return '<div class="lg-item-card' + (isOpen ? ' open' : '') + (selectedItem === item ? ' sel' : '') + '" data-item="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' +
           '<div class="lg-item-head" data-toggle="' + esc(item) + '">' +
-            '<div class="lg-item-name-row"><span class="lg-item-dot lg-keycap' + (selectedItem === item ? ' sel' : '') + '" data-key="' + esc(item) + '" style="--kc:' + dc(it.color) + '"></span>' +
+            '<div class="lg-item-name-row"><span class="lg-item-dot lg-keycap' + (selectedItem === item ? ' sel' : '') + '" data-key="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' + kcSvg(dc(it.color)) + '</span>' +
             '<span class="lg-item-name">' + esc(item) + '</span></div>' +
             '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
           '</div>' +
@@ -1784,7 +1814,7 @@ function dc(c){
           const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
           const typeLabel = t.type === "in" ? "입금" : t.type === "out" ? "출금" : "설정";
           return '<tr><td>' + formatDateLabel(t.date) + '</td>' +
-            '<td><span class="lg-table-tag" style="background:' + dc(colorMap[t.item] || "#8A7C52") + '">' + esc(t.item) + '</span></td>' +
+            '<td><span class="lg-table-tag lg-tag-svg"><svg class="lg-tag-bg" aria-hidden="true"><rect width="100%" height="100%" rx="6" fill="' + dc(colorMap[t.item] || "#8A7C52") + '"/></svg><span class="lg-tag-tx">' + esc(t.item) + '</span></span></td>' +
             '<td>' + typeLabel + '</td>' +
             '<td class="lg-table-amount ' + (isPos ? "in" : "out") + '">' + (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</td>' +
             '<td class="lg-table-memo">' + esc(t.memo) + '</td></tr>';
