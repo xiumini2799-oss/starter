@@ -509,6 +509,11 @@
 
   html, body { scrollbar-width: none; -ms-overflow-style: none; }
   html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+  .lg-account-panel { z-index: 100; }
+  .lg-item-head:active { background: transparent; }
+  .lg-item-balance { padding: 12px 8px; margin: -12px -8px; cursor: pointer; border-radius: 12px; }
+  .lg-item-balance:active { background: var(--tile); }
 </style>
 </head>
 <body>
@@ -1217,7 +1222,7 @@
   })();
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v77";
+  var LG_VERSION = "v78";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1882,7 +1887,8 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
   function attachEvents() {
     applySelectionUI();
     document.querySelectorAll("[data-toggle]").forEach((el) => {
-      el.onclick = () => {
+      el.onclick = (ev) => {
+        if (!ev.target.closest(".lg-item-balance")) return;
         const item = el.getAttribute("data-toggle");
         const apply = () => { openItem = openItem === item ? null : item; editingTxId = null; render(); };
         const card = el.closest(".lg-item-card");
