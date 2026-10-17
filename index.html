@@ -471,7 +471,11 @@
   .lg-bubble-err { flex-basis: 100%; margin: 0 0 2px; font-size: 13px; }
 
   /* 맨 위 기존 입력창은 숨김 (입력은 키캡 말풍선으로만) */
-  .lg-quick-panel { display: none !important; }
+  .lg-quick-panel { display: block !important; position: sticky; top: 0; z-index: 30; background: var(--paper); padding: 8px 0 10px; margin: -8px 0 6px; }
+  .lg-quick-row { align-items: center; }
+  .lg-sel-chip { flex: none; display: inline-flex; align-items: center; gap: 5px; max-width: 40%; margin-left: 4px; padding: 6px 10px 6px 6px; border: none; border-radius: 14px; background: var(--tile); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .lg-sel-chip svg { width: 22px; height: 22px; flex: none; filter: none; }
+  .lg-sel-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   html, body { overscroll-behavior-y: none; }
   .lg-version { margin-top: 10px; font-size: 11px; color: var(--ink-soft); text-align: center; }
@@ -502,6 +506,9 @@
   .lg-tag-bg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .lg-tag-tx { position: relative; }
   .lg-mdot { display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+  html, body { scrollbar-width: none; -ms-overflow-style: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; width: 0; height: 0; }
 </style>
 </head>
 <body>
@@ -1073,21 +1080,22 @@
       el.classList.toggle("sel", on);
       var card = el.closest(".lg-item-card"); if (card) { card.classList.toggle("sel", on); if (on) selCard = card; }
     });
-    var old = document.querySelector(".lg-bubble"); if (old) old.remove();
-    if (!selCard) document.documentElement.classList.remove("lg-kb");
-    var inp = document.getElementById("quickInput");
-    if (inp) inp.placeholder = "예: 점심 -9000 식비";
-    if (!selCard) return;
-    var head = selCard.querySelector(".lg-item-head"), key = selCard.querySelector("[data-key]");
-    var bub = document.createElement("div");
-    bub.className = "lg-bubble" + (bubbleFresh ? " fresh" : "");
-    bub.innerHTML = '<input class="lg-bubble-input" type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" placeholder="내용 금액 (예: 점심 -9000)"><button type="button" class="lg-bubble-add">추가</button><button type="button" class="lg-bubble-x" aria-label="닫기">×</button><div class="lg-error lg-bubble-err hidden"></div>';
-    head.after(bub);
-    var bi = bub.querySelector("input"); bi.value = bubbleDraft;
-    try { var kr = key.getBoundingClientRect(), br = bub.getBoundingClientRect(); bub.style.setProperty("--tail", (kr.left + kr.width / 2 - br.left) + "px"); } catch (e) {}
-    document.documentElement.classList.add("lg-kb");
-    if (bubbleFresh || refocusBubble) { try { bi.focus({ preventScroll: true }); } catch (e) { try { bi.focus(); } catch (e2) {} } if (bubbleFresh) calmReveal(bub); }
-    bubbleFresh = false; refocusBubble = false;
+    var oldb = document.querySelector(".lg-bubble"); if (oldb) oldb.remove();
+    document.documentElement.classList.remove("lg-kb");
+    var panel = document.querySelector(".lg-quick-panel"), row = document.querySelector(".lg-quick-row"), inp = document.getElementById("quickInput");
+    var chip = row ? row.querySelector(".lg-sel-chip") : null;
+    if (!selCard) {
+      if (chip) chip.remove();
+      if (panel) panel.classList.remove("has-target");
+      if (inp) inp.placeholder = "예: 점심 -9000 식비";
+      return;
+    }
+    var kcv = selCard.querySelector("[data-key]").style.getPropertyValue("--kc") || "#8A7C52";
+    if (panel) { panel.classList.add("has-target"); panel.style.setProperty("--kc", kcv); }
+    if (!chip && row) { chip = document.createElement("button"); chip.type = "button"; chip.className = "lg-sel-chip"; chip.setAttribute("aria-label", "선택 해제"); row.insertBefore(chip, inp); }
+    if (chip) chip.innerHTML = kcSvg(kcv) + '<span class="lg-sel-name"></span>';
+    if (chip) chip.querySelector(".lg-sel-name").textContent = selectedItem;
+    if (inp) inp.placeholder = "예: 점심 -9000";
   }
   (function setupKeycaps() {
     var list = document.getElementById("itemList");
@@ -1110,6 +1118,8 @@
       if (e.target.closest(".lg-bubble-add")) { e.stopPropagation(); submitBubble(); }
       else if (e.target.closest(".lg-bubble-x")) { e.stopPropagation(); selectedItem = null; applySelectionUI(); }
     });
+    document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest(".lg-sel-chip")) { selectedItem = null; applySelectionUI(); } });
+    document.addEventListener("mousedown", function (e) { if (e.target.closest && (e.target.closest("[data-key]") || e.target.closest("#quickBtn") || e.target.closest(".lg-sel-chip"))) e.preventDefault(); });
     list.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("lg-bubble-input")) { e.preventDefault(); submitBubble(); } });
     list.addEventListener("input", function (e) { if (e.target.classList && e.target.classList.contains("lg-bubble-input")) bubbleDraft = e.target.value; });
     function syncSoundChips() { document.querySelectorAll("[data-sound-pref]").forEach(function (b) { b.classList.toggle("active", (b.getAttribute("data-sound-pref") === "on") === KeySound.enabled); }); }
@@ -1207,7 +1217,7 @@
   })();
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v75";
+  var LG_VERSION = "v77";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
