@@ -4,20 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <title>잔액 관리 가계부</title>
-<meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#1F2A44" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#F4F5F7" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="잔액 관리 가계부" />
 <script>
 (function(){
   var KEY="household-ledger-theme";
-  window.__lgThemePref=function(){return "dark";}; /* 현재는 남색 고정. 이후 업데이트에서 색 조합 선택 추가 예정 */
+  window.__lgThemePref=function(){var v=null;try{v=localStorage.getItem(KEY);}catch(e){} return v==="dark"?"dark":"light";}; /* 기본 화이트, 블랙은 옵션 */
   window.__lgApplyTheme=function(pref){
     var t=pref==="dark"?"dark":"light";
     document.documentElement.setAttribute("data-theme",t);
-    var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",t==="dark"?"#0E1118":"#1F2A44");
-    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content","dark");
+    var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",t==="dark"?"#0B0B0D":"#F4F5F7");
+    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content",t==="dark"?"dark":"light");
   };
   window.__lgApplyTheme(window.__lgThemePref());
 })();
@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <link rel="icon" href="./icon-192.png" />
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
 
   :root {
     --paper: #F7F4EC; --paper-line: #E2DAC4; --ink: #1F2A44; --ink-soft: #6B7280;
@@ -255,6 +255,205 @@
   .lg-theme-row { display: flex; gap: 4px; margin-bottom: 8px; }
   .lg-theme-chip { flex: 1; padding: 7px 0; border: 1px solid var(--paper-line); background: var(--surface); color: var(--ink-soft); font-size: 12px; cursor: pointer; }
   .lg-theme-chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 700; }
+
+  /* =====================================================================
+     SKIN: 플랫 카드형 — 화이트(기본) / 블랙(옵션). 기능 코드는 그대로, 스타일만 덮어씀
+     ===================================================================== */
+  :root, :root[data-theme="light"] {
+    --paper:#F4F5F7; --paper-line:#EDEEF1; --ink:#191F28; --ink-soft:#8B95A1;
+    --red-ink:#F04452; --green-ink:#12A66B; --stamp:#191F28; --on-stamp:#fff;
+    --surface:#fff; --glass6:#fff; --glass5:#fff; --warn-bg:#FFF4E5;
+    --overlay:rgba(0,0,0,0.42); --shadow:rgba(0,0,0,0.12);
+    --danger:#F04452; --danger-bg:#F04452; --on-danger:#fff;
+    --tile:#F4F5F7; --track:#E8EAEE; --soft-line:#F2F3F5;
+    color-scheme: light; interpolate-size: allow-keywords;
+  }
+  :root[data-theme="dark"] {
+    --paper:#0B0B0D; --paper-line:#26272C; --ink:#F2F4F6; --ink-soft:#8B95A1;
+    --red-ink:#FF7A85; --green-ink:#4FD29B; --stamp:#F2F4F6; --on-stamp:#111;
+    --surface:#1A1B1F; --glass6:#1A1B1F; --glass5:#1A1B1F; --warn-bg:#2A2218;
+    --overlay:rgba(0,0,0,0.7); --shadow:rgba(0,0,0,0.5);
+    --danger:#FF7A85; --danger-bg:#D93A48; --on-danger:#fff;
+    --tile:#25262B; --track:#1A1B1F; --soft-line:#222328;
+    color-scheme: dark;
+  }
+  input, select, textarea { color: var(--ink); background-color: var(--surface); font-family: inherit; }
+  body { background-image: none; padding: 14px 16px 72px; -webkit-tap-highlight-color: transparent; letter-spacing: -0.01em; }
+  .lg-title, .login-title, .lg-modal-title, .lg-total-value, .lg-item-balance, .lg-section-title,
+  .lg-hist-month-label, .lg-stamp-value { font-family: inherit; }
+
+  /* 헤더 */
+  .lg-header { border-bottom: none; padding: 8px 2px 18px; margin-bottom: 0; }
+  .lg-title { font-size: 19px; font-weight: 800; letter-spacing: -0.04em; }
+  .lg-header-right { display: flex; align-items: center; gap: 10px; }
+  .lg-save-small-btn { border: none; background: transparent; color: var(--ink-soft); font-size: 13px; font-weight: 600; padding: 6px 4px; }
+  .lg-account-btn { width: 38px; height: 38px; border: none; background: var(--track) var(--avatar, url(./char-head.png)) center / cover no-repeat; font-size: 0; color: transparent; }
+  .lg-account-panel { border: none; border-radius: 22px; padding: 18px; width: 232px; top: 52px; box-shadow: 0 12px 40px var(--shadow); }
+  .lg-account-panel.show { animation: lgPop .18s ease; transform-origin: top right; }
+  .lg-account-name { font-size: 15px; font-weight: 700; }
+  .lg-logout-btn, .lg-login-inline-btn, .lg-backup-btn { border: none; background: var(--tile); border-radius: 12px; padding: 12px; color: var(--ink); }
+  .lg-delete-data-btn { border: none; background: transparent; color: var(--danger); font-weight: 600; padding: 10px; }
+  .lg-theme-label { font-size: 12px; color: var(--ink-soft); margin: 2px 0 8px; }
+  .lg-theme-row { background: var(--track); border-radius: 12px; padding: 3px; gap: 3px; margin-bottom: 8px; }
+  .lg-theme-chip { border: none; background: transparent; border-radius: 9px; padding: 9px 0; font-weight: 600; color: var(--ink-soft); }
+  .lg-theme-chip.active { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .lg-sync-note { margin: 0 4px 8px; min-height: 0; }
+
+  /* 잔액 카드 + 캐릭터 */
+  .lg-total-panel { position: relative; overflow: hidden; border: none; border-radius: 28px; background: var(--surface); text-align: left; padding: 26px 24px 24px; margin-bottom: 14px; min-height: 150px; }
+  .lg-total-label { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+  .lg-total-value { font-size: 36px; font-weight: 800; letter-spacing: -0.045em; position: relative; z-index: 1; }
+  .lg-hero-char { position: absolute; right: -4px; bottom: -6px; height: 146px; width: auto; image-rendering: pixelated; pointer-events: none; }
+
+  /* 탭 */
+  .lg-tabbar { border: none; background: var(--track); border-radius: 14px; padding: 4px; margin-bottom: 14px; gap: 4px; }
+  .lg-tab-btn { border-radius: 11px; padding: 11px; font-weight: 600; transition: background-color .2s, color .2s, box-shadow .2s; }
+  .lg-tab-btn.active { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  :root[data-theme="dark"] .lg-tab-btn.active { background: #2E2F35; }
+  .lg-tab-panel.active { animation: lgFadeUp .3s ease; }
+
+  /* 입력 */
+  .lg-quick-row { background: var(--surface); border-radius: 20px; padding: 7px; gap: 6px; }
+  .lg-quick-input { border: none; background: transparent; padding: 12px 14px; outline: none; font-size: 15px; }
+  .lg-quick-btn { border-radius: 14px; padding: 12px 20px; font-size: 14px; }
+  .lg-quick-hint { margin-left: 6px; }
+
+  /* 항목 관리 */
+  .lg-manage-toggle { border: none; border-radius: 18px; background: var(--surface); padding: 16px 18px; color: var(--ink-soft); font-size: 13px; font-weight: 500; }
+  .lg-manage-chevron { width: 18px; height: 18px; position: relative; font-size: 0; transition: transform .25s ease; }
+  .lg-manage-chevron::before { content: ""; position: absolute; left: 4px; top: 3px; width: 7px; height: 7px; border-right: 2px solid var(--ink-soft); border-bottom: 2px solid var(--ink-soft); transform: rotate(45deg); border-radius: 1px; }
+  .lg-manage-body { border: none; border-radius: 0 0 18px 18px; margin-top: -8px; padding: 14px 18px 18px; background: var(--surface); overflow: hidden; }
+  .lg-manage-body.show { animation: lgOpen .28s ease both; }
+  .lg-manage-body.closing { display: block; animation: lgClose .22s ease both; }
+  .lg-manage-row { border-bottom: 1px solid var(--soft-line); padding: 11px 0; }
+  .lg-manage-edit, .lg-manage-del { text-decoration: none; font-size: 13px; font-weight: 600; color: var(--ink-soft); padding: 2px 4px; }
+  .lg-manage-del { color: var(--red-ink); }
+  .lg-manage-rename-input, .lg-add-item-row input, .lg-tx-form input, .lg-tx-edit-fields input, .lg-modal-input, .lg-modal-select {
+    border: none; border-radius: 12px; padding: 12px 13px; background: var(--tile); }
+  .lg-add-item-row button, .lg-manage-save, .lg-tx-edit-btns button { border-radius: 12px; font-weight: 700; }
+
+  /* 항목 카드 */
+  .lg-item-card { border: none; border-radius: 24px; margin-bottom: 12px; overflow: hidden; transition: transform .12s ease; }
+  .lg-item-card:active { transform: scale(.994); }
+  .lg-item-head { padding: 18px 20px; transition: background-color .15s; }
+  .lg-item-head:active { background: var(--tile); }
+  .lg-item-name-row { gap: 14px; }
+  .lg-item-dot { width: 40px; height: 40px; border-radius: 14px; }
+  .lg-manage-row .lg-item-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; filter: none; font-size: 0; }
+  .lg-item-name { font-size: 16px; font-weight: 600; }
+  .lg-item-balance { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; }
+  .lg-item-body { border-top: 1px solid var(--soft-line); padding: 6px 20px 20px; overflow: hidden; }
+  .lg-item-card.open .lg-item-body { animation: lgOpen .3s ease both; }
+  .lg-item-card.open.closing .lg-item-body { animation: lgClose .22s ease both; }
+  .lg-history-label { margin-top: 10px; }
+  .lg-month-header { background: var(--tile); border-radius: 10px; padding: 7px 10px; }
+  .lg-tx-item { border-bottom: 1px solid var(--soft-line); padding: 12px 0; }
+  .lg-tx-amount { font-weight: 700; letter-spacing: -0.02em; }
+  .lg-edit-tx { text-decoration: none; color: var(--ink-soft); font-weight: 600; }
+  .lg-type-switch { border: none; background: var(--track); border-radius: 12px; padding: 3px; gap: 3px; }
+  .lg-type-btn { border-radius: 9px; padding: 9px; }
+  .lg-tx-submit, .lg-tx-cancel { border-radius: 13px; padding: 12px; }
+  .lg-tx-cancel { border: none; background: var(--tile); color: var(--ink-soft); }
+
+  /* 전체 내역 */
+  .lg-panel { border: none; border-radius: 26px; background: var(--surface); padding: 22px 20px; }
+  .lg-section-title { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; }
+  .lg-hist-nav-btn { font-size: 22px; color: var(--ink); }
+  .lg-hist-month-label { font-size: 15px; }
+  .lg-hist-all-btn { border: none; background: var(--tile); border-radius: 10px; padding: 7px 12px; font-weight: 600; }
+  .lg-hist-all-btn.active { background: var(--ink); color: var(--paper); }
+  .lg-range-chip { border: none; background: var(--tile); border-radius: 10px; font-weight: 600; }
+  .lg-range-chip.active { background: var(--ink); color: var(--paper); }
+  .lg-stamp { background: var(--tile); border-radius: 16px; padding: 14px 4px; }
+  .lg-stamp-value { font-weight: 800; letter-spacing: -0.03em; }
+  .lg-ratio-donut::after { background: var(--surface); }
+  .lg-empty { border: none; background: var(--tile); border-radius: 18px; padding: 24px 14px; }
+  .lg-empty::before { content: ""; display: block; width: 72px; height: 72px; margin: 0 auto 10px; background: var(--avatar, url(./char-head.png)) center / contain no-repeat; image-rendering: pixelated; }
+  .lg-table th { border-bottom: 1px solid var(--paper-line); }
+  .lg-table td { border-bottom-color: var(--soft-line); }
+  .lg-table-tag { border-radius: 6px; }
+
+  /* 팝업·배너 */
+  .lg-modal-backdrop:not(.hidden) { animation: lgFade .2s ease; }
+  .lg-modal { border: none; border-radius: 28px; padding: 26px 24px 22px; background: var(--surface); animation: lgPopUp .28s cubic-bezier(.2,.9,.3,1.12); }
+  .lg-modal-title { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; }
+  .lg-modal-row button, .lg-modal-actions button { border: none; background: var(--tile); border-radius: 16px; padding: 14px; color: var(--ink); }
+  .lg-modal-row button.danger { background: var(--danger-bg); color: var(--on-danger); }
+  .lg-guest-warn, .lg-install-banner { border: none; border-radius: 20px; background: var(--warn-bg); padding: 16px 18px; }
+  .lg-guest-warn-row button { border: none; border-radius: 12px; background: var(--surface); padding: 10px; }
+  .lg-install-banner button { border-radius: 10px; }
+  .login-google-btn { border: none; border-radius: 16px; background: var(--ink); color: var(--paper); padding: 15px 30px; }
+  .splash-logo { border: none; border-radius: 26px; }
+  .lg-exit-toast { border-radius: 14px; }
+
+  :root[data-theme="dark"] .lg-theme-chip.active { background: #34353B; }
+  button { transition: transform .12s ease, background-color .18s ease, opacity .18s ease; }
+  button:active:not(:disabled) { transform: scale(.97); }
+
+  @keyframes lgFade { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes lgFadeUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+  @keyframes lgPop { from { opacity: 0; transform: scale(.94) } to { opacity: 1; transform: none } }
+  @keyframes lgPopUp { from { opacity: 0; transform: translateY(14px) scale(.97) } to { opacity: 1; transform: none } }
+  @keyframes lgOpen { from { opacity: 0; height: 0; padding-top: 0; padding-bottom: 0 } to { opacity: 1; height: auto } }
+  @keyframes lgClose { from { opacity: 1; height: auto } to { opacity: 0; height: 0; padding-top: 0; padding-bottom: 0 } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* ---------- 키캡 (항목 옆 사각형) ---------- */
+  .lg-item-dot.lg-keycap {
+    --kcd: color-mix(in srgb, var(--kc) 62%, #000);
+    width: 40px; height: 40px; position: relative; flex: none; cursor: pointer; margin: 0 0 3px;
+    background: none; display: block; filter: none; border-radius: 0; box-shadow: none;
+    transition: transform .06s ease; -webkit-user-select: none; user-select: none; touch-action: manipulation;
+  }
+  /* 몸통: 얇은 앞면 */
+  .lg-item-dot.lg-keycap::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 4px; bottom: 0; border-radius: 9px 9px 7px 7px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--kc) 80%, #000), var(--kcd));
+    box-shadow: 0 3px 6px rgba(20,16,10,.22), 0 1px 0 rgba(0,0,0,.18);
+    transition: box-shadow .06s ease; pointer-events: none;
+  }
+  /* 윗면: 무광 PBT 느낌, 부드러운 곡면 */
+  .lg-item-dot.lg-keycap::after {
+    content: ""; position: absolute; left: 4px; right: 4px; top: 0; height: 29px; border-radius: 8px; pointer-events: none;
+    background: linear-gradient(165deg, color-mix(in srgb, var(--kc) 82%, #fff) 0%, var(--kc) 55%, color-mix(in srgb, var(--kc) 93%, #000) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1.5px 2px rgba(0,0,0,.16);
+    transition: transform .06s ease;
+  }
+  .lg-item-dot.lg-keycap:active, .lg-item-dot.lg-keycap.sel { transform: translateY(2.5px); }
+  .lg-item-dot.lg-keycap:active::before, .lg-item-dot.lg-keycap.sel::before { box-shadow: 0 1px 2px rgba(20,16,10,.25), 0 1px 0 rgba(0,0,0,.18); }
+  .lg-item-dot.lg-keycap:active::after, .lg-item-dot.lg-keycap.sel::after { transform: translateY(1.5px); }
+  .lg-item-card.sel { box-shadow: 0 0 0 2px color-mix(in srgb, var(--kc) 55%, transparent); }
+  .lg-item-head { padding-top: 12px; padding-bottom: 11px; }
+
+  /* 꿀젤리 */
+  :root[data-char="jelly"] .lg-item-dot.lg-keycap::before, :root[data-char="squish"] .lg-item-dot.lg-keycap::before { display: none; }
+  :root[data-char="jelly"] .lg-item-dot.lg-keycap {
+    width: 50px; height: 50px;
+    border-radius: 46% 46% 42% 42% / 52% 52% 48% 48%; --kcd: color-mix(in srgb, var(--kc) 70%, #000);
+    background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.85) 0 9%, rgba(255,255,255,0) 22%), linear-gradient(160deg, color-mix(in srgb, var(--kc) 72%, #fff), var(--kc) 60%, color-mix(in srgb, var(--kc) 85%, #000));
+    box-shadow: 0 6px 0 color-mix(in srgb, var(--kc) 62%, #5a2d00), 0 12px 16px color-mix(in srgb, var(--kc) 50%, transparent), inset 0 -4px 8px rgba(255,255,255,.35), inset 0 2px 6px rgba(255,255,255,.4);
+  }
+  :root[data-char="jelly"] .lg-item-dot.lg-keycap::after { inset: 0; border-radius: inherit; background: none; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.35); }
+  :root[data-char="jelly"] .lg-item-dot.lg-keycap:active, :root[data-char="jelly"] .lg-item-dot.lg-keycap.sel { transform: translateY(5px) scale(1.07, .88); box-shadow: 0 1px 0 color-mix(in srgb, var(--kc) 62%, #5a2d00), 0 4px 8px color-mix(in srgb, var(--kc) 45%, transparent), inset 0 -3px 6px rgba(255,255,255,.3); }
+
+  /* 스퀴시 */
+  :root[data-char="squish"] .lg-item-dot.lg-keycap {
+    width: 50px; height: 50px;
+    border-radius: 50%; --kcd: color-mix(in srgb, var(--kc) 78%, #000);
+    background: radial-gradient(circle at 36% 30%, rgba(255,255,255,.7) 0 12%, rgba(255,255,255,0) 30%), var(--kc);
+    box-shadow: 0 6px 0 var(--kcd), 0 10px 12px rgba(0,0,0,.14), inset 0 -5px 8px rgba(0,0,0,.08);
+  }
+  :root[data-char="squish"] .lg-item-dot.lg-keycap::after { display: none; }
+  :root[data-char="squish"] .lg-item-dot.lg-keycap:active, :root[data-char="squish"] .lg-item-dot.lg-keycap.sel { transform: translateY(5px) scale(1.12, .8); box-shadow: 0 1px 0 var(--kcd), 0 3px 6px rgba(0,0,0,.14); }
+
+  /* 입력 대상 표시 */
+  .lg-quick-target { display: flex; align-items: center; gap: 8px; margin: 0 4px 10px; font-size: 13px; color: var(--ink-soft); animation: lgFadeUp .2s ease; }
+  .lg-qt-dot { width: 12px; height: 12px; border-radius: 4px; background: var(--kc); box-shadow: 0 2px 0 color-mix(in srgb, var(--kc) 58%, #000); }
+  .lg-qt-name { font-weight: 700; color: var(--ink); }
+  .lg-quick-target button { margin-left: auto; border: none; background: var(--tile); color: var(--ink-soft); width: 26px; height: 26px; border-radius: 50%; font-size: 16px; line-height: 1; padding: 0; }
+  .lg-quick-panel.has-target .lg-quick-row { box-shadow: 0 0 0 2px color-mix(in srgb, var(--kc) 55%, transparent); }
+  .lg-quick-row { transition: box-shadow .2s ease; }
+  :root[data-char="jelly"] .lg-hero-char, :root[data-char="squish"] .lg-hero-char { height: 80px; right: 16px; bottom: 0; }
 </style>
 </head>
 <body>
@@ -286,13 +485,20 @@
   <div id="appScreen" class="hidden">
     <div class="lg-header">
       <div class="lg-title">잔액 관리 가계부</div>
-      <button class="lg-account-btn" id="accountBtn">＋</button>
+      <div class="lg-header-right">
+        <button class="lg-save-small-btn" id="saveBtn">저장</button>
+        <button class="lg-account-btn" id="accountBtn">＋</button>
+      </div>
       <div class="lg-account-panel" id="accountPanel">
         <div class="lg-account-name" id="accountName"></div>
         <div class="lg-account-email" id="accountEmail"></div>
         <div class="lg-account-mode" id="accountMode"></div>
         <button class="lg-logout-btn hidden" id="logoutBtn">로그아웃</button>
         <button class="lg-login-inline-btn hidden" id="loginBtnInline">구글로 로그인</button>
+        <div class="lg-theme-label">화면 색</div>
+        <div class="lg-theme-row"><button class="lg-theme-chip" data-theme-pref="light">화이트</button><button class="lg-theme-chip" data-theme-pref="dark">블랙</button></div>
+        <div class="lg-theme-label">키 소리 · 진동</div>
+        <div class="lg-theme-row"><button class="lg-theme-chip" data-sound-pref="on">켜짐</button><button class="lg-theme-chip" data-sound-pref="off">꺼짐</button></div>
         <button class="lg-backup-btn" id="backupOpenBtn">백업 · 내보내기</button>
         <button class="lg-delete-data-btn hidden" id="deleteDataBtn">내 정보 모두 삭제</button>
       </div>
@@ -335,13 +541,11 @@
     </div>
     <div id="syncNote" class="lg-sync-note"></div>
 
-    <div class="lg-action-row">
-      <button class="lg-save-small-btn" id="saveBtn">저장</button>
-    </div>
 
     <div class="lg-total-panel">
       <div class="lg-total-label">전체 잔액</div>
       <div id="totalValue" class="lg-total-value">0원</div>
+      <img class="lg-hero-char" src="./char.png" alt="" />
     </div>
 
     <div class="lg-tabbar">
@@ -351,15 +555,16 @@
 
     <div class="lg-tab-panel active" id="tabPanelItems">
       <div class="lg-quick-panel">
+        <div id="quickTarget" class="lg-quick-target hidden"></div>
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="입력: 내용 금액 분류" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="항목 키를 누르고 내용·금액을 입력" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
         <div id="quickError" class="lg-error hidden"></div>
       </div>
 
       <div class="lg-items-manage">
-        <button class="lg-manage-toggle" id="manageToggle"><span>항목 관리 (추가 / 삭제)</span><span class="lg-manage-chevron" id="manageChevron">▾</span></button>
+        <button class="lg-manage-toggle" id="manageToggle"><span>항목 관리 (추가 / 삭제)</span><span class="lg-manage-chevron" id="manageChevron"></span></button>
         <div class="lg-manage-body" id="manageBody">
           <div id="manageList"></div>
           <div class="lg-add-item-row">
@@ -666,11 +871,193 @@
   document.getElementById("accountBtn").onclick = () => document.getElementById("accountPanel").classList.toggle("show");
 
   // 화면 색상 선택 (베이지 / 다크 / 자동)
-  function dc(c){
+    /* ===================== 캐릭터 · 팔레트 · 키캡 · 타건음 ===================== */
+  var OLD_PALETTE = ["#C08A2E","#2F6B4F","#3A4E8C","#52616B","#6B4E71","#2E7D82","#A8562E","#8C3A4E","#4E6B3A","#8A7C52"];
+  var CHARACTERS = {
+    classic: { name: "로고 캐릭터", sound: "classic", deep: true, img: "./char.png", avatar: "./char-head.png",
+      pal: ["#1B2A4A","#6E1F2F","#1F4D3A","#9A6A2F","#4A2C5A","#14575F","#7A2E1F","#3A3F4B","#A8842F","#40406F","#5B6B2F","#704A4A"] },
+    jelly:   { name: "꿀젤리", sound: "jelly", deep: false, img: "./cat.png", avatar: "./cat_avatar.png",
+      pal: ["#F5A623","#F28E4B","#F6C453","#E98A8A","#D7A363","#F0B27A","#E5855F","#C99A5B","#F7D774","#DB9F8A","#EFA94A","#D68C5C"] },
+    squish:  { name: "스퀴시", sound: "squish", deep: false, img: "./cat.png", avatar: "./cat_avatar.png",
+      pal: ["#FF9EBB","#9AD0F5","#A8E0B2","#FFC27A","#C6A8E8","#FFE27A","#7ADCD6","#FFB2A1","#B5C8FF","#E8B4E0","#C9E88A","#FFD1DC"] }
+  };
+  function curChar() { var k = null; try { k = localStorage.getItem("household-ledger-character"); } catch (e) {} return CHARACTERS[k] ? k : "classic"; }
+  function applyCharacter() {
+    var k = curChar(), c = CHARACTERS[k];
+    document.documentElement.setAttribute("data-char", k);
+    var h = document.querySelector(".lg-hero-char"); if (h) h.setAttribute("src", c.img);
+    document.documentElement.style.setProperty("--avatar", "url(" + c.avatar + ")");
+  }
+  function shadeHex(hex, k) {
+    var n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+    var t = k % 2 === 1 ? 0.2 + 0.05 * ((k - 1) / 2) : -(0.16 + 0.04 * (k / 2 - 1));
+    var f = function (v) { return Math.max(0, Math.min(255, Math.round(t > 0 ? v + (255 - v) * t : v * (1 + t)))); };
+    return "#" + [f(r), f(g), f(b)].map(function (v) { return (v < 16 ? "0" : "") + v.toString(16); }).join("");
+  }
+  function palColor(i) {
+    var p = CHARACTERS[curChar()].pal, n = p.length;
+    return i < n ? p[i] : shadeHex(p[i % n], Math.floor(i / n));
+  }
+  function refreshItemColors() {
+    var max = -1;
+    state.items.forEach(function (it) {
+      if (typeof it.ci !== "number") { var oi = OLD_PALETTE.indexOf(String(it.color || "").toUpperCase()); if (oi >= 0) it.ci = oi; }
+      if (typeof it.ci === "number") max = Math.max(max, it.ci);
+    });
+    state.items.forEach(function (it) { if (typeof it.ci !== "number") it.ci = ++max; it.color = palColor(it.ci); });
+  }
+  function nextCi() { var max = -1; state.items.forEach(function (it) { if (typeof it.ci === "number") max = Math.max(max, it.ci); }); return max + 1; }
+  applyCharacter();
+
+  /* 타건음 (Web Audio로 직접 합성 — 별도 음원 파일 없음) */
+  var KeySound = (function () {
+    var ctx = null, master = null, noiseBuf = null, enabled = true, isDown = false;
+    try { enabled = localStorage.getItem("household-ledger-sound") !== "off"; } catch (e) {}
+    function ensure() {
+      if (!enabled) return null;
+      if (!ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+        try { ctx = new AC({ latencyHint: "interactive" }); } catch (e) { ctx = new AC(); } master = ctx.createGain(); master.gain.value = 0.65;
+        var lpf = ctx.createBiquadFilter(); lpf.type = "lowpass"; lpf.frequency.value = 3800; lpf.Q.value = 0.5; var comp = ctx.createDynamicsCompressor(); master.connect(lpf); lpf.connect(comp); comp.connect(ctx.destination);
+        var len = Math.floor(ctx.sampleRate * 0.25); noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+        var d = noiseBuf.getChannelData(0); for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (ctx.state === "suspended") ctx.resume();
+      return ctx;
+    }
+    function tone(t, o) {
+      var osc = ctx.createOscillator(), g = ctx.createGain(); osc.type = o.type || "sine";
+      osc.frequency.setValueAtTime(o.f0, t); osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.f1 || o.f0), t + o.dur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.gain, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
+      var node = osc; if (o.lp) { var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = o.lp; osc.connect(f); node = f; }
+      node.connect(g); g.connect(master); osc.start(t); osc.stop(t + o.dur + 0.02);
+    }
+    function burst(t, o) {
+      var src = ctx.createBufferSource(); src.buffer = noiseBuf;
+      var f = ctx.createBiquadFilter(); f.type = o.type || "bandpass"; f.frequency.value = o.freq; f.Q.value = o.q || 1;
+      var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(o.gain, t + (o.atk || 0.004)); g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur + 0.004);
+      src.connect(f); f.connect(g); g.connect(master); src.start(t, Math.random() * 0.1); src.stop(t + o.dur + 0.02);
+    }
+    var P = {
+      classic: {
+        /* 윤활 기계식: 또렷한 첫 타격 + 몸통 울림(턱) — 영상 분석 기반 */
+        down: function (t) {
+          var r = 1 + (Math.random() - 0.5) * 0.07;
+          /* 키보드 찰칵: 클릭 + 플라스틱 바닥 닿는 소리 + 몸통 울림 */
+          burst(t, { freq: 2100 * r, q: 1.4, dur: 0.016, gain: 0.8, atk: 0.002 });
+          tone(t, { f0: 3000 * r, f1: 2800 * r, dur: 0.06, gain: 0.04 });
+          tone(t, { f0: 4300 * r, f1: 4100 * r, dur: 0.035, gain: 0.012 });
+          burst(t + 0.01, { freq: 1300 * r, q: 1.0, dur: 0.028, gain: 0.85, atk: 0.003 });
+          burst(t + 0.01, { type: "lowpass", freq: 1000 * r, dur: 0.05, gain: 0.45, atk: 0.005 });
+          tone(t + 0.01, { f0: 220 * r, f1: 135 * r, dur: 0.09, gain: 0.55, lp: 1000 });
+          tone(t + 0.01, { f0: 100 * r, f1: 75 * r, dur: 0.07, gain: 0.18 });
+        },
+        up: function (t) {
+          var r = 1 + (Math.random() - 0.5) * 0.07;
+          burst(t, { freq: 1900 * r, q: 1.2, dur: 0.014, gain: 0.3, atk: 0.003 });
+          tone(t + 0.002, { f0: 170 * r, f1: 125 * r, dur: 0.045, gain: 0.09, lp: 800 });
+        }
+      },
+      jelly: {
+        down: function (t) { tone(t, { f0: 430, f1: 140, dur: 0.17, gain: 0.5, lp: 1100 }); tone(t + 0.012, { f0: 300, f1: 120, dur: 0.2, gain: 0.24, type: "triangle", lp: 800 }); burst(t, { type: "lowpass", freq: 700, dur: 0.05, gain: 0.12 }); },
+        up: function (t) { tone(t, { f0: 170, f1: 320, dur: 0.12, gain: 0.26, lp: 1000 }); }
+      },
+      squish: {
+        down: function (t) { tone(t, { f0: 310, f1: 540, dur: 0.1, gain: 0.32 }); tone(t, { f0: 640, f1: 920, dur: 0.06, gain: 0.1 }); burst(t, { freq: 1800, q: 0.8, dur: 0.04, gain: 0.12 }); },
+        up: function (t) { tone(t, { f0: 540, f1: 280, dur: 0.1, gain: 0.22 }); }
+      }
+    };
+    function prof() { return P[CHARACTERS[curChar()].sound] || P.classic; }
+    return {
+      get enabled() { return enabled; }, get isDown() { return isDown; },
+      setEnabled: function (v) { enabled = !!v; try { localStorage.setItem("household-ledger-sound", enabled ? "on" : "off"); } catch (e) {} },
+      warm: function () { ensure(); }, down: function () { var c = ensure(); if (!c) return; isDown = true; prof().down(c.currentTime + 0.0005); try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {} },
+      up: function () { isDown = false; var c = ensure(); if (!c) return; prof().up(c.currentTime + 0.001); }
+      
+    };
+  })();
+
+  /* 키캡으로 항목 고르기 → 내용·금액만 입력 */
+  var selectedItem = null;
+  function applySelectionUI() {
+    if (selectedItem && !getItem(selectedItem)) selectedItem = null;
+    document.querySelectorAll("[data-key]").forEach(function (el) {
+      var on = el.getAttribute("data-key") === selectedItem;
+      el.classList.toggle("sel", on);
+      var card = el.closest(".lg-item-card"); if (card) card.classList.toggle("sel", on);
+    });
+    var t = document.getElementById("quickTarget"), inp = document.getElementById("quickInput"), panel = document.querySelector(".lg-quick-panel");
+    if (!t || !inp) return;
+    if (selectedItem) {
+      var it = getItem(selectedItem);
+      t.style.setProperty("--kc", dc(it.color)); panel.style.setProperty("--kc", dc(it.color));
+      t.innerHTML = '<span class="lg-qt-dot"></span><span class="lg-qt-name">' + esc(selectedItem) + '</span><span>에 기록</span><button type="button" id="quickTargetClear" aria-label="선택 해제">×</button>';
+      t.classList.remove("hidden"); panel.classList.add("has-target");
+      inp.placeholder = "내용 금액 (예: 점심 -9000)";
+    } else {
+      t.classList.add("hidden"); t.innerHTML = ""; panel.classList.remove("has-target");
+      inp.placeholder = "항목 키를 누르고 내용·금액을 입력";
+    }
+  }
+  (function setupKeycaps() {
+    var list = document.getElementById("itemList");
+    document.addEventListener("pointerdown", function () { KeySound.warm(); }, { capture: true, passive: true });
+    list.addEventListener("pointerdown", function (e) { if (e.target.closest("[data-key]")) KeySound.down(); }, { passive: true });
+    var release = function () { if (KeySound.isDown) KeySound.up(); };
+    document.addEventListener("pointerup", release); document.addEventListener("pointercancel", release);
+    list.addEventListener("click", function (e) {
+      var k = e.target.closest("[data-key]"); if (!k) return;
+      e.stopPropagation(); e.preventDefault();
+      var name = k.getAttribute("data-key");
+      selectedItem = selectedItem === name ? null : name;
+      applySelectionUI();
+      if (selectedItem) { try { document.getElementById("quickInput").focus({ preventScroll: true }); } catch (err) {} }
+    }, true);
+    document.getElementById("quickTarget").addEventListener("click", function (e) {
+      if (e.target.closest("#quickTargetClear")) { selectedItem = null; applySelectionUI(); }
+    });
+    function syncSoundChips() { document.querySelectorAll("[data-sound-pref]").forEach(function (b) { b.classList.toggle("active", (b.getAttribute("data-sound-pref") === "on") === KeySound.enabled); }); }
+    document.querySelectorAll("[data-sound-pref]").forEach(function (b) {
+      b.onclick = function () { KeySound.setEnabled(b.getAttribute("data-sound-pref") === "on"); syncSoundChips(); if (KeySound.enabled) { KeySound.down(); setTimeout(function () { KeySound.up(); }, 90); } };
+    });
+    syncSoundChips();
+  })();
+
+  function showQuickError(msg) {
+    var box = document.getElementById("quickError"); if (!box) return;
+    box.textContent = msg; box.classList.remove("hidden");
+    clearTimeout(showQuickError._t); showQuickError._t = setTimeout(function () { box.classList.add("hidden"); }, 2600);
+  }
+  function handleQuickAdd() {
+    var input = document.getElementById("quickInput");
+    var raw = input.value.trim();
+    if (!raw) return;
+    var tokens = raw.split(/\s+/);
+    if (selectedItem) {
+      var m1 = tokens[tokens.length - 1].match(/^(-?)(\d+)$/);
+      if (!m1) { showQuickError("금액을 숫자로 적어주세요 (예: 점심 -9000)"); return; }
+      addTransaction(selectedItem, m1[1] === "-" ? "out" : "in", Number(m1[2]), tokens.slice(0, tokens.length - 1).join(" "), todayISO());
+      input.value = "";
+      return;
+    }
+    /* 예전 방식(내용 금액 분류)도 계속 지원 */
+    if (tokens.length >= 2) {
+      var m = tokens[tokens.length - 2].match(/^(-?)(\d+)$/);
+      if (m) {
+        addTransaction(tokens[tokens.length - 1], m[1] === "-" ? "out" : "in", Number(m[2]), tokens.slice(0, tokens.length - 2).join(" "), todayISO());
+        input.value = "";
+        return;
+      }
+    }
+    showQuickError("항목 키를 먼저 눌러주세요");
+  }
+
+function dc(c){
     if(!/^#[0-9a-fA-F]{6}$/.test(c||"")) return c;
-    const n=parseInt(c.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
     if(document.documentElement.getAttribute("data-theme")==="dark"){
-      const mix=(v)=>Math.round(v+(255-v)*0.45); return "rgb("+mix(r)+","+mix(g)+","+mix(b)+")";
+      const n=parseInt(c.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
+      const amt=CHARACTERS[curChar()].deep?0.3:0.06;
+      const mix=(v)=>Math.round(v+(255-v)*amt); return "rgb("+mix(r)+","+mix(g)+","+mix(b)+")";
     }
     return c;
   }
@@ -816,12 +1203,12 @@
     for (const it of raw.items) {
       if (!it || typeof it.name !== "string" || !it.name.trim() || names.has(it.name)) continue;
       names.add(it.name);
-      items.push({ name: it.name, initialBalance: Number.isFinite(it.initialBalance) ? it.initialBalance : 0, color: typeof it.color === "string" ? it.color : PALETTE[items.length % PALETTE.length] });
+      items.push({ name: it.name, initialBalance: Number.isFinite(it.initialBalance) ? it.initialBalance : 0, color: typeof it.color === "string" ? it.color : palColor(items.length) });
     }
     const txs = [];
     for (const t of raw.transactions) {
       if (!t || typeof t.item !== "string" || !["in", "out", "adjust"].includes(t.type) || !Number.isFinite(t.amount) || !/^\d{4}-\d{2}-\d{2}$/.test(t.date || "")) continue;
-      if (!names.has(t.item)) { names.add(t.item); items.push({ name: t.item, initialBalance: 0, color: PALETTE[items.length % PALETTE.length] }); }
+      if (!names.has(t.item)) { names.add(t.item); items.push({ name: t.item, initialBalance: 0, color: palColor(items.length) }); }
       txs.push({ id: typeof t.id === "string" ? t.id : makeId(), item: t.item, type: t.type, amount: t.amount, memo: typeof t.memo === "string" ? t.memo.slice(0, 20) : "", date: t.date, createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now() });
     }
     return { items, transactions: txs };
@@ -847,7 +1234,7 @@
   });
 
   // ===================== 가계부 앱 로직 =====================
-  const PALETTE = ["#C08A2E","#2F6B4F","#3A4E8C","#52616B","#6B4E71","#2E7D82","#A8562E","#8C3A4E","#4E6B3A","#8A7C52"];
+  /* 팔레트는 아래 CHARACTERS에 캐릭터별로 정의 */
   const GUEST_STORAGE_KEY = "household-ledger-guest-v1";
   const GUEST_CHOSEN_KEY = "household-ledger-guest-chosen";
 
@@ -938,8 +1325,9 @@
 
   function ensureItem(name) {
     if (getItem(name)) return;
-    const color = PALETTE[state.items.length % PALETTE.length];
-    state.items.push({ name, initialBalance: 0, color });
+    const ci = nextCi();
+    const color = palColor(ci);
+    state.items.push({ name, initialBalance: 0, color, ci });
   }
 
   function addTransaction(item, type, amount, memo, date) {
@@ -971,8 +1359,9 @@
   function addItem(name, startBalance) {
     name = name.trim();
     if (!name || getItem(name)) return false;
-    const color = PALETTE[state.items.length % PALETTE.length];
-    state.items.push({ name, initialBalance: startBalance || 0, color });
+    const ci = nextCi();
+    const color = palColor(ci);
+    state.items.push({ name, initialBalance: startBalance || 0, color, ci });
     saveState();
     return true;
   }
@@ -996,23 +1385,6 @@
     if (openItem === oldName) openItem = newName;
     saveState();
     return true;
-  }
-
-  function handleQuickAdd() {
-    const input = document.getElementById("quickInput");
-    const errBox = document.getElementById("quickError");
-    const raw = input.value.trim();
-    if (!raw) return;
-    const tokens = raw.split(/\s+/);
-    if (tokens.length < 2) return;
-    const item = tokens[tokens.length - 1];
-    const m = tokens[tokens.length - 2].match(/^(-?)(\d+)$/);
-    if (!m) return;
-    const type = m[1] === "-" ? "out" : "in";
-    const amount = Number(m[2]);
-    const memo = tokens.slice(0, tokens.length - 2).join(" ");
-    addTransaction(item, type, amount, memo, todayISO());
-    input.value = "";
   }
 
   function buildMonthGroups(name) {
@@ -1103,7 +1475,7 @@
       const pctNum = (amt / total) * 100;
       const deg = (amt / total) * 360;
       const start = cursor;
-      const end = cursor + deg;
+      const end = cursor + Math.min(deg, 359.99);
       const midDeg = start + deg / 2;
       cursor = end;
       const it = getItem(name);
@@ -1145,6 +1517,7 @@
   }
 
   function render() {
+    refreshItemColors();
     const total = state.items.reduce((s, it) => s + currentBalance(it.name), 0);
     const totalEl = document.getElementById("totalValue");
     totalEl.textContent = formatWon(total);
@@ -1210,9 +1583,9 @@
                 ' · 이월 ' + formatWon(g.opening) + '</div>' + txHtml + '</div>';
             }).join("");
 
-        return '<div class="lg-item-card' + (isOpen ? ' open' : '') + '" data-item="' + esc(item) + '">' +
+        return '<div class="lg-item-card' + (isOpen ? ' open' : '') + (selectedItem === item ? ' sel' : '') + '" data-item="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' +
           '<div class="lg-item-head" data-toggle="' + esc(item) + '">' +
-            '<div class="lg-item-name-row"><span class="lg-item-dot" style="background:' + dc(it.color) + '"></span>' +
+            '<div class="lg-item-name-row"><span class="lg-item-dot lg-keycap' + (selectedItem === item ? ' sel' : '') + '" data-key="' + esc(item) + '" style="--kc:' + dc(it.color) + '"></span>' +
             '<span class="lg-item-name">' + esc(item) + '</span></div>' +
             '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
           '</div>' +
@@ -1306,8 +1679,15 @@
   }
 
   function attachEvents() {
+    applySelectionUI();
     document.querySelectorAll("[data-toggle]").forEach((el) => {
-      el.onclick = () => { const item = el.getAttribute("data-toggle"); openItem = openItem === item ? null : item; editingTxId = null; render(); };
+      el.onclick = () => {
+        const item = el.getAttribute("data-toggle");
+        const apply = () => { openItem = openItem === item ? null : item; editingTxId = null; render(); };
+        const card = el.closest(".lg-item-card");
+        if (openItem === item && card && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) { card.classList.add("closing"); setTimeout(apply, 220); }
+        else apply();
+      };
     });
     document.querySelectorAll("[data-edittx]").forEach((el) => {
       el.onclick = (e) => { e.stopPropagation(); editingTxId = el.getAttribute("data-edittx"); render(); };
@@ -1415,8 +1795,14 @@
   document.getElementById("quickInput").addEventListener("keydown", (e) => { if (e.key === "Enter") handleQuickAdd(); });
 
   document.getElementById("manageToggle").onclick = () => {
-    document.getElementById("manageBody").classList.toggle("show");
+    const body = document.getElementById("manageBody");
     document.getElementById("manageChevron").classList.toggle("open");
+    if (body.classList.contains("show") && !body.classList.contains("closing")) {
+      body.classList.add("closing");
+      setTimeout(() => body.classList.remove("show", "closing"), 220);
+    } else if (!body.classList.contains("closing")) {
+      body.classList.add("show");
+    }
   };
   document.getElementById("addItemBtn").onclick = () => {
     const nameEl = document.getElementById("newItemName");

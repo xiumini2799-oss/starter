@@ -1,10 +1,12 @@
-const CACHE_NAME = "ledger-cache-v62";
+const CACHE_NAME = "ledger-cache-v63";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
+  "./char.png",
+  "./char-head.png",
 ];
 
 // 로그인/동기화에 쓰는 Firebase 모듈도 미리 저장해 두면, 오프라인에서 켜도 로그인 상태가 유지돼요
