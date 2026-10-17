@@ -471,6 +471,25 @@
 
   /* 맨 위 기존 입력창은 숨김 (입력은 키캡 말풍선으로만) */
   .lg-quick-panel { display: none !important; }
+
+  html, body { overscroll-behavior-y: none; }
+  .lg-version { margin-top: 10px; font-size: 11px; color: var(--ink-soft); text-align: center; }
+  .lg-guide { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; padding: 20px; animation: lgGuideIn .25s ease; }
+  .lg-guide.out { opacity: 0; transition: opacity .25s; }
+  @keyframes lgGuideIn { from { opacity: 0; } to { opacity: 1; } }
+  .lg-guide-card { width: 100%; max-width: 340px; background: var(--surface); color: var(--ink); border-radius: 24px; padding: 26px 22px 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  .lg-guide-title { font-size: 22px; font-weight: 800; }
+  .lg-guide-sub { margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
+  .lg-guide-demo { position: relative; height: 96px; margin: 16px 0 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+  .lg-guide-key { width: 52px; height: 52px; border: none; padding: 0; border-radius: 12px; background: linear-gradient(#7fa6ee, #4f7fd8); box-shadow: 0 5px 0 #34589e, 0 8px 14px rgba(0,0,0,.25); cursor: pointer; animation: lgGuidePulse 1.4s ease-in-out infinite; -webkit-tap-highlight-color: transparent; }
+  .lg-guide-key.down { transform: translateY(4px); box-shadow: 0 1px 0 #34589e; animation: none; }
+  @keyframes lgGuidePulse { 0%,100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+  .lg-guide-bubble { margin-top: 16px; padding: 8px 14px; border-radius: 14px; background: color-mix(in srgb, #4f7fd8 12%, var(--surface)); border: 1px solid color-mix(in srgb, #4f7fd8 35%, transparent); font-size: 14px; font-weight: 600; }
+  .lg-guide-bubble.hidden { display: none; }
+  .lg-guide-steps { text-align: left; margin: 10px 0 0; padding-left: 22px; font-size: 14px; line-height: 1.7; }
+  .lg-guide-steps span { font-size: 12px; color: var(--ink-soft); }
+  .lg-guide-note { margin-top: 12px; font-size: 12px; color: var(--ink-soft); }
+  .lg-guide-go { margin-top: 16px; width: 100%; padding: 14px; border: none; border-radius: 14px; background: var(--ink); color: var(--surface); font-size: 15px; font-weight: 700; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -892,12 +911,14 @@
   var OLD_PALETTE = ["#C08A2E","#2F6B4F","#3A4E8C","#52616B","#6B4E71","#2E7D82","#A8562E","#8C3A4E","#4E6B3A","#8A7C52"];
   var CHARACTERS = {
     classic: { name: "로고 캐릭터", sound: "classic", deep: true, img: "./char.png", avatar: "./char-head.png",
-      pal: ["#1B2A4A","#6E1F2F","#1F4D3A","#9A6A2F","#4A2C5A","#14575F","#7A2E1F","#3A3F4B","#A8842F","#40406F","#5B6B2F","#704A4A"] },
+      pal: ["#1B2A4A","#6E1F2F","#1F4D3A","#9A6A2F","#4A2C5A","#14575F","#7A2E1F","#3A3F4B","#A8842F","#40406F","#5B6B2F","#704A4A"],
+      dark: ["#6C9FEB","#E17C81","#55B57C","#CF9A3D","#B189DD","#00B5BD","#E08164","#A2ABBB","#C9B050","#9095EA","#96B559","#D87CA9"] },
     jelly:   { name: "꿀젤리", sound: "jelly", deep: false, img: "./cat.png", avatar: "./cat_avatar.png",
       pal: ["#F5A623","#F28E4B","#F6C453","#E98A8A","#D7A363","#F0B27A","#E5855F","#C99A5B","#F7D774","#DB9F8A","#EFA94A","#D68C5C"] },
     squish:  { name: "스퀴시", sound: "squish", deep: false, img: "./cat.png", avatar: "./cat_avatar.png",
       pal: ["#FF9EBB","#9AD0F5","#A8E0B2","#FFC27A","#C6A8E8","#FFE27A","#7ADCD6","#FFB2A1","#B5C8FF","#E8B4E0","#C9E88A","#FFD1DC"] }
   };
+  /*TESTDP*/
   function curChar() { var k = null; try { k = localStorage.getItem("household-ledger-character"); } catch (e) {} return CHARACTERS[k] ? k : "classic"; }
   function applyCharacter() {
     var k = curChar(), c = CHARACTERS[k];
@@ -1089,11 +1110,47 @@
     showQuickError("이렇게 적어주세요: 예: 점심 -9000 식비. 또는 항목 키를 눌러 바로 입력해요");
   }
 
+
+  /* 첫 실행 안내 + 버전 표시 */
+  var LG_VERSION = "v67";
+  (function setupGuide() {
+    try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
+    var FLAG = "household-ledger-guide-seen";
+    try { if (localStorage.getItem(FLAG)) return; } catch (e) {}
+    var tries = 0;
+    var iv = setInterval(function () {
+      if (++tries > 600) { clearInterval(iv); return; }
+      var app = document.getElementById("appScreen"), gw = document.getElementById("guestWarn");
+      if (!app || app.classList.contains("hidden")) return;
+      if (gw && !gw.classList.contains("hidden")) return;
+      clearInterval(iv);
+      var ov = document.createElement("div"); ov.id = "lgGuide"; ov.className = "lg-guide";
+      ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+      ov.innerHTML = '<div class="lg-guide-card">' +
+        '<div class="lg-guide-title">눌러보세요!</div>' +
+        '<div class="lg-guide-sub">키캡을 누르면 바로 기록할 수 있어요</div>' +
+        '<div class="lg-guide-demo"><button type="button" class="lg-guide-key" aria-label="키캡 눌러보기"></button><div class="lg-guide-bubble hidden">점심 -9000</div></div>' +
+        '<ol class="lg-guide-steps"><li>항목 옆 <b>키캡</b>을 눌러요</li><li><b>내용, 금액</b>을 입력해요<br><span>지출은 -9000, 수입은 그냥 숫자</span></li><li><b>추가</b>를 누르면 끝!</li></ol>' +
+        '<div class="lg-guide-note">항목은 \'항목 관리\'에서 추가·삭제해요</div>' +
+        '<button type="button" class="lg-guide-go">시작하기</button></div>';
+      document.body.appendChild(ov);
+      var key = ov.querySelector(".lg-guide-key"), bub = ov.querySelector(".lg-guide-bubble");
+      key.addEventListener("pointerdown", function () { key.classList.add("down"); KeySound.down(); bub.classList.remove("hidden"); }, { passive: true });
+      var up = function () { if (key.classList.contains("down")) { key.classList.remove("down"); KeySound.up(); } };
+      key.addEventListener("pointerup", up); key.addEventListener("pointercancel", up); key.addEventListener("pointerleave", up);
+      ov.querySelector(".lg-guide-go").addEventListener("click", function () {
+        try { localStorage.setItem(FLAG, "1"); } catch (e) {}
+        ov.classList.add("out"); setTimeout(function () { ov.remove(); }, 250);
+      });
+    }, 300);
+  })();
 function dc(c){
     if(!/^#[0-9a-fA-F]{6}$/.test(c||"")) return c;
     if(document.documentElement.getAttribute("data-theme")==="dark"){
       const n=parseInt(c.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
-      const amt=CHARACTERS[curChar()].deep?0.3:0.06;
+      const ch=CHARACTERS[curChar()];
+      if(ch.dark){ const k=ch.pal.findIndex((x)=>x.toUpperCase()===c.toUpperCase()); if(k>=0) return ch.dark[k]; }
+      const amt=ch.deep?0.3:0.06;
       const mix=(v)=>Math.round(v+(255-v)*amt); return "rgb("+mix(r)+","+mix(g)+","+mix(b)+")";
     }
     return c;
