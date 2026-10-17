@@ -403,20 +403,20 @@
   /* ---------- 키캡 (항목 옆 사각형) ---------- */
   .lg-item-dot.lg-keycap {
     --kcd: color-mix(in srgb, var(--kc) 62%, #000);
-    width: 40px; height: 40px; position: relative; flex: none; cursor: pointer; margin: 0 0 3px;
+    width: 32px; height: 32px; position: relative; flex: none; cursor: pointer; margin: 0 0 2px;
     background: none; display: block; filter: none; border-radius: 0; box-shadow: none;
     transition: transform .06s ease; -webkit-user-select: none; user-select: none; touch-action: manipulation;
   }
   /* 몸통: 얇은 앞면 */
   .lg-item-dot.lg-keycap::before {
-    content: ""; position: absolute; left: 0; right: 0; top: 4px; bottom: 0; border-radius: 9px 9px 7px 7px;
+    content: ""; position: absolute; left: 0; right: 0; top: 3px; bottom: 0; border-radius: 8px 8px 6px 6px;
     background: linear-gradient(180deg, color-mix(in srgb, var(--kc) 80%, #000), var(--kcd));
     box-shadow: 0 3px 6px rgba(20,16,10,.22), 0 1px 0 rgba(0,0,0,.18);
     transition: box-shadow .06s ease; pointer-events: none;
   }
   /* 윗면: 무광 PBT 느낌, 부드러운 곡면 */
   .lg-item-dot.lg-keycap::after {
-    content: ""; position: absolute; left: 4px; right: 4px; top: 0; height: 29px; border-radius: 8px; pointer-events: none;
+    content: ""; position: absolute; left: 3px; right: 3px; top: 0; height: 23px; border-radius: 7px; pointer-events: none;
     background: linear-gradient(165deg, color-mix(in srgb, var(--kc) 82%, #fff) 0%, var(--kc) 55%, color-mix(in srgb, var(--kc) 93%, #000) 100%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1.5px 2px rgba(0,0,0,.16);
     transition: transform .06s ease;
@@ -425,7 +425,8 @@
   .lg-item-dot.lg-keycap:active::before, .lg-item-dot.lg-keycap.sel::before { box-shadow: 0 1px 2px rgba(20,16,10,.25), 0 1px 0 rgba(0,0,0,.18); }
   .lg-item-dot.lg-keycap:active::after, .lg-item-dot.lg-keycap.sel::after { transform: translateY(1.5px); }
   .lg-item-card.sel { box-shadow: 0 0 0 2px color-mix(in srgb, var(--kc) 55%, transparent); }
-  .lg-item-head { padding-top: 12px; padding-bottom: 11px; }
+  .lg-item-head { padding-top: 8px; padding-bottom: 8px; }
+  .lg-item-card { margin-bottom: 8px; border-radius: 20px; }
 
   /* 꿀젤리 */
   :root[data-char="jelly"] .lg-item-dot.lg-keycap::before, :root[data-char="squish"] .lg-item-dot.lg-keycap::before { display: none; }
@@ -461,7 +462,7 @@
   .lg-bubble { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 12px 12px; padding: 7px 7px 7px 14px; border-radius: 16px;
     background: color-mix(in srgb, var(--kc) 9%, var(--surface)); border: 1.5px solid color-mix(in srgb, var(--kc) 42%, transparent); --tail: 36px; }
   .lg-bubble.fresh { animation: lgBubble .22s ease both; transform-origin: var(--tail) 0; }
-  @keyframes lgBubble { from { opacity: 0; transform: translateY(-6px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes lgBubble { from { opacity: 0; } to { opacity: 1; } }
   .lg-bubble-input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 16px; color: var(--ink); padding: 9px 0; }
   .lg-bubble-input::placeholder { color: var(--ink-soft); opacity: .7; }
   .lg-bubble-add { border: none; border-radius: 12px; padding: 10px 16px; font: inherit; font-size: 14px; font-weight: 700; background: var(--btn, var(--ink)); color: var(--btn-ink, var(--surface)); cursor: pointer; }
@@ -490,6 +491,8 @@
   .lg-guide-steps span { font-size: 12px; color: var(--ink-soft); }
   .lg-guide-note { margin-top: 12px; font-size: 12px; color: var(--ink-soft); }
   .lg-guide-go { margin-top: 16px; width: 100%; padding: 14px; border: none; border-radius: 14px; background: var(--ink); color: var(--surface); font-size: 15px; font-weight: 700; cursor: pointer; }
+
+  .lg-kb #itemList { padding-bottom: 45vh; }
 </style>
 </head>
 <body>
@@ -911,8 +914,7 @@
   var OLD_PALETTE = ["#C08A2E","#2F6B4F","#3A4E8C","#52616B","#6B4E71","#2E7D82","#A8562E","#8C3A4E","#4E6B3A","#8A7C52"];
   var CHARACTERS = {
     classic: { name: "로고 캐릭터", sound: "classic", deep: true, img: "./char.png", avatar: "./char-head.png",
-      pal: ["#1B2A4A","#6E1F2F","#1F4D3A","#9A6A2F","#4A2C5A","#14575F","#7A2E1F","#3A3F4B","#A8842F","#40406F","#5B6B2F","#704A4A"],
-      dark: ["#6C9FEB","#E17C81","#55B57C","#CF9A3D","#B189DD","#00B5BD","#E08164","#A2ABBB","#C9B050","#9095EA","#96B559","#D87CA9"] },
+      pal: ["#1B2A4A","#6E1F2F","#1F4D3A","#9A6A2F","#4A2C5A","#14575F","#7A2E1F","#3A3F4B","#A8842F","#40406F","#5B6B2F","#704A4A"], },
     jelly:   { name: "꿀젤리", sound: "jelly", deep: false, img: "./cat.png", avatar: "./cat_avatar.png",
       pal: ["#F5A623","#F28E4B","#F6C453","#E98A8A","#D7A363","#F0B27A","#E5855F","#C99A5B","#F7D774","#DB9F8A","#EFA94A","#D68C5C"] },
     squish:  { name: "스퀴시", sound: "squish", deep: false, img: "./cat.png", avatar: "./cat_avatar.png",
@@ -1036,6 +1038,24 @@
     bubbleDraft = ""; refocusBubble = true;
     addTransaction(selectedItem, e.type, e.amount, e.memo, todayISO());
   }
+  /* 키보드가 올라올 때 화면을 한 번만 부드럽게 맞춘다 */
+  var calmTimer = null;
+  function calmReveal(bub) {
+    var vv = window.visualViewport, done = false, tm;
+    function go() {
+      if (done) return; done = true; clearTimeout(tm);
+      if (vv) vv.removeEventListener("resize", onr);
+      if (!bub.isConnected) return;
+      var r = bub.getBoundingClientRect(), top = vv ? vv.offsetTop : 0, h = vv ? vv.height : window.innerHeight;
+      var dy = 0;
+      if (r.bottom > top + h - 16) dy = r.bottom - (top + h - 16);
+      else if (r.top < top + 70) dy = r.top - (top + 70);
+      if (Math.abs(dy) > 4) window.scrollBy({ top: dy, behavior: "smooth" });
+    }
+    function onr() { clearTimeout(calmTimer); calmTimer = setTimeout(go, 140); }
+    if (vv) vv.addEventListener("resize", onr);
+    tm = setTimeout(go, 700);
+  }
   function applySelectionUI() {
     if (selectedItem && !getItem(selectedItem)) selectedItem = null;
     var selCard = null;
@@ -1045,6 +1065,7 @@
       var card = el.closest(".lg-item-card"); if (card) { card.classList.toggle("sel", on); if (on) selCard = card; }
     });
     var old = document.querySelector(".lg-bubble"); if (old) old.remove();
+    if (!selCard) document.documentElement.classList.remove("lg-kb");
     var inp = document.getElementById("quickInput");
     if (inp) inp.placeholder = "예: 점심 -9000 식비";
     if (!selCard) return;
@@ -1055,7 +1076,8 @@
     head.after(bub);
     var bi = bub.querySelector("input"); bi.value = bubbleDraft;
     try { var kr = key.getBoundingClientRect(), br = bub.getBoundingClientRect(); bub.style.setProperty("--tail", (kr.left + kr.width / 2 - br.left) + "px"); } catch (e) {}
-    if (bubbleFresh || refocusBubble) { try { bi.focus(); } catch (e) {} }
+    document.documentElement.classList.add("lg-kb");
+    if (bubbleFresh || refocusBubble) { try { bi.focus({ preventScroll: true }); } catch (e) { try { bi.focus(); } catch (e2) {} } if (bubbleFresh) calmReveal(bub); }
     bubbleFresh = false; refocusBubble = false;
   }
   (function setupKeycaps() {
@@ -1112,7 +1134,7 @@
 
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v67";
+  var LG_VERSION = "v68";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
