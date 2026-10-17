@@ -1170,8 +1170,33 @@
     return "data:image/svg+xml," + encodeURIComponent(svg);
   }
 
+  /* 그래프는 캔버스에 그려서 삼성 인터넷 등의 자동 다크 변환이 색을 바꾸지 못하게 한다 */
+  (function lgCanvasCharts() {
+    function paint() {
+      document.querySelectorAll("canvas[data-lgd]:not([data-ok])").forEach(function (cv) {
+        try {
+          var segs = JSON.parse(decodeURIComponent(cv.getAttribute("data-lgd"))), ctx = cv.getContext("2d");
+          ctx.clearRect(0, 0, cv.width, cv.height); ctx.scale(2, 2);
+          segs.forEach(function (s) { ctx.fillStyle = s.c; ctx.fill(new Path2D(s.d)); });
+          cv.setAttribute("data-ok", "1");
+        } catch (e) {}
+      });
+      document.querySelectorAll("canvas[data-lgr]:not([data-ok])").forEach(function (cv) {
+        try {
+          var p = Math.max(0, Math.min(100, parseFloat(cv.getAttribute("data-lgr")) || 0)) / 100, ctx = cv.getContext("2d"), c = cv.width / 2, a0 = -Math.PI / 2;
+          ctx.clearRect(0, 0, cv.width, cv.height); ctx.lineWidth = cv.width / 6;
+          ctx.strokeStyle = "#F2958A"; ctx.beginPath(); ctx.arc(c, c, cv.width * 5 / 12, 0, Math.PI * 2); ctx.stroke();
+          if (p > 0) { ctx.strokeStyle = "#7FD0A6"; ctx.beginPath(); ctx.arc(c, c, cv.width * 5 / 12, a0, a0 + Math.PI * 2 * p); ctx.stroke(); }
+          cv.setAttribute("data-ok", "1");
+        } catch (e) {}
+      });
+    }
+    try { new MutationObserver(paint).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+    paint();
+  })();
+
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v72";
+  var LG_VERSION = "v73";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1654,7 +1679,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     assignLabelY(leftSegs);
     assignLabelY(rightSegs);
 
-    const pathsSvg = '<image x="0" y="0" width="300" height="120" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120">' + segs.map((s) => '<path d="' + s.path + '" fill="' + s.color + '"/>').join("") + '</svg>') + '"/>';
+    const pathsSvg = '<foreignObject x="0" y="0" width="300" height="120"><canvas width="600" height="240" style="width:300px;height:120px;display:block" data-lgd="' + encodeURIComponent(JSON.stringify(segs.map((s) => ({ d: s.path, c: s.color })))) + '"></canvas></foreignObject>';
     const labelsSvg = segs.map((s) => {
       const labelX = s.side === "left" ? cx - rOuter - 10 : cx + rOuter + 10;
       const textAnchor = s.side === "left" ? "end" : "start";
@@ -1802,7 +1827,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
       const outPctNum = 100 - inPctNum;
       const inDeg = (inPctNum / 100) * 360;
       chartEl.innerHTML =
-        '<img class="lg-ratio-donut" alt="" src="' + ratioDonutSrc(inPctNum) + '">' +
+        '<canvas class="lg-ratio-donut" width="120" height="120" data-lgr="' + inPctNum + '"></canvas>' +
         '<div class="lg-ratio-legend">' +
           '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background: var(--green-ink);"></span><span>입금</span><span class="lg-ratio-pct income">' + formatPct(inPctNum) + '</span></div>' +
           '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background: var(--red-ink);"></span><span>출금</span><span class="lg-ratio-pct expense">' + formatPct(outPctNum) + '</span></div>' +
