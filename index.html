@@ -1170,7 +1170,18 @@
     return "data:image/svg+xml," + encodeURIComponent(svg);
   }
 
-  /* 그래프는 캔버스에 그려서 삼성 인터넷 등의 자동 다크 변환이 색을 바꾸지 못하게 한다 */
+  /* 단색 대신 거의 티 안 나는 그라데이션으로 칠해서, 브라우저 자동 다크 변환이 색을 밝히지 못하게 한다 */
+  var lgGN = 0;
+  function lgGrad(id, c) {
+    var rgb = kcRgb(c);
+    return '<linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + kcMix(rgb, [255, 255, 255], 0.015) + '"/><stop offset="1" stop-color="' + kcMix(rgb, [0, 0, 0], 0.04) + '"/></linearGradient>';
+  }
+  function ratioDonutSvg(inPct) {
+    var n = ++lgGN, C = 157.08, a = Math.max(0, Math.min(100, inPct)) / 100 * C;
+    return '<defs>' + lgGrad('lgrg' + n, "#7FD0A6") + lgGrad('lgrr' + n, "#F2958A") + '</defs><g transform="rotate(-90 30 30)" fill="none" stroke-width="10"><circle cx="30" cy="30" r="25" stroke="url(#lgrr' + n + ')"/>' + (a > 0 ? '<circle cx="30" cy="30" r="25" stroke="url(#lgrg' + n + ')" stroke-dasharray="' + a + ' ' + C + '"/>' : '') + '</g>';
+  }
+
+  /* 도넛 그래프는 캔버스에 그려서 삼성 인터넷 등의 자동 다크 변환이 색을 바꾸지 못하게 한다 */
   (function lgCanvasCharts() {
     function paint() {
       document.querySelectorAll("canvas[data-lgd]:not([data-ok])").forEach(function (cv) {
@@ -1196,7 +1207,7 @@
   })();
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v73";
+  var LG_VERSION = "v75";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1712,7 +1723,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
           '<button class="lg-manage-del" data-cancelrename="' + esc(it.name) + '">취소</button>' +
         '</div>';
       }
-      return '<div class="lg-manage-row"><span><svg class="lg-mdot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect width="12" height="12" rx="4" fill="' + dc(it.color) + '"/></svg>' + esc(it.name) + '</span>' +
+      return '<div class="lg-manage-row"><span><svg class="lg-mdot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">' + (function () { var id = "lgmg" + (++lgGN); return "<defs>" + lgGrad(id, dc(it.color)) + "</defs><rect width=\"12\" height=\"12\" rx=\"4\" fill=\"url(#" + id + ")\"/>"; })() + '</svg>' + esc(it.name) + '</span>' +
         '<span class="lg-manage-row-btns">' +
           '<button class="lg-manage-edit" data-editname="' + esc(it.name) + '">수정</button>' +
           '<button class="lg-manage-del" data-remove="' + esc(it.name) + '">삭제</button>' +
@@ -1848,7 +1859,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
           const isPos = t.type === "adjust" ? t.amount >= 0 : t.type === "in";
           const typeLabel = t.type === "in" ? "입금" : t.type === "out" ? "출금" : "설정";
           return '<tr><td>' + formatDateLabel(t.date) + '</td>' +
-            '<td><span class="lg-table-tag lg-tag-svg"><svg class="lg-tag-bg" aria-hidden="true"><rect width="100%" height="100%" rx="6" fill="' + dc(colorMap[t.item] || "#8A7C52") + '"/></svg><span class="lg-tag-tx">' + esc(t.item) + '</span></span></td>' +
+            '<td><span class="lg-table-tag lg-tag-svg"><svg class="lg-tag-bg" aria-hidden="true">' + (function () { var id = "lgtg" + (++lgGN); return "<defs>" + lgGrad(id, dc(colorMap[t.item] || "#8A7C52")) + "</defs><rect width=\"100%\" height=\"100%\" rx=\"6\" fill=\"url(#" + id + ")\"/>"; })() + '</svg><span class="lg-tag-tx">' + esc(t.item) + '</span></span></td>' +
             '<td>' + typeLabel + '</td>' +
             '<td class="lg-table-amount ' + (isPos ? "in" : "out") + '">' + (isPos ? "+" : "-") + formatWon(Math.abs(t.amount)) + '</td>' +
             '<td class="lg-table-memo">' + esc(t.memo) + '</td></tr>';
