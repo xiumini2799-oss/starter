@@ -557,7 +557,7 @@
       <div class="lg-quick-panel">
         <div id="quickTarget" class="lg-quick-target hidden"></div>
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="항목 키를 누르고 내용·금액을 입력" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="항목 키를 누른 뒤 입력" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
         <div id="quickError" class="lg-error hidden"></div>
@@ -996,7 +996,7 @@
       inp.placeholder = "내용 금액 (예: 점심 -9000)";
     } else {
       t.classList.add("hidden"); t.innerHTML = ""; panel.classList.remove("has-target");
-      inp.placeholder = "항목 키를 누르고 내용·금액을 입력";
+      inp.placeholder = "항목 키를 누른 뒤 입력";
     }
   }
   (function setupKeycaps() {
@@ -1030,7 +1030,8 @@
   }
   function handleQuickAdd() {
     var input = document.getElementById("quickInput");
-    var raw = input.value.trim();
+    var qe = document.getElementById("quickError"); if (qe) qe.classList.add("hidden");
+    var raw = input.value.trim().replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
     if (!raw) return;
     var tokens = raw.split(/\s+/);
     if (selectedItem) {
