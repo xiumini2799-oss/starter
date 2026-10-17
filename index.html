@@ -460,8 +460,6 @@
   /* ---------- 키캡 말풍선 입력 ---------- */
   .lg-bubble { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 12px 12px; padding: 7px 7px 7px 14px; border-radius: 16px;
     background: color-mix(in srgb, var(--kc) 9%, var(--surface)); border: 1.5px solid color-mix(in srgb, var(--kc) 42%, transparent); --tail: 36px; }
-  .lg-bubble::before { content: ""; position: absolute; top: -8px; left: calc(var(--tail) - 7px); width: 12px; height: 12px; transform: rotate(45deg);
-    background: color-mix(in srgb, var(--kc) 9%, var(--surface)); border-left: 1.5px solid color-mix(in srgb, var(--kc) 42%, transparent); border-top: 1.5px solid color-mix(in srgb, var(--kc) 42%, transparent); border-top-left-radius: 3px; }
   .lg-bubble.fresh { animation: lgBubble .22s ease both; transform-origin: var(--tail) 0; }
   @keyframes lgBubble { from { opacity: 0; transform: translateY(-6px) scale(.96); } to { opacity: 1; transform: none; } }
   .lg-bubble-input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 16px; color: var(--ink); padding: 9px 0; }
@@ -470,6 +468,9 @@
   .lg-bubble-add:active { transform: scale(.96); }
   .lg-bubble-x { border: none; background: var(--tile); color: var(--ink-soft); width: 30px; height: 30px; border-radius: 50%; font-size: 17px; line-height: 1; padding: 0; cursor: pointer; }
   .lg-bubble-err { flex-basis: 100%; margin: 0 0 2px; font-size: 13px; }
+
+  /* 맨 위 기존 입력창은 숨김 (입력은 키캡 말풍선으로만) */
+  .lg-quick-panel { display: none !important; }
 </style>
 </head>
 <body>
@@ -512,7 +513,7 @@
         <button class="lg-logout-btn hidden" id="logoutBtn">로그아웃</button>
         <button class="lg-login-inline-btn hidden" id="loginBtnInline">구글로 로그인</button>
         <div class="lg-theme-label">화면 색</div>
-        <div class="lg-theme-row"><button class="lg-theme-chip" data-theme-pref="auto">자동</button><button class="lg-theme-chip" data-theme-pref="light">화이트</button><button class="lg-theme-chip" data-theme-pref="dark">블랙</button></div>
+        <div class="lg-theme-row"><button class="lg-theme-chip" data-theme-pref="light">화이트</button><button class="lg-theme-chip" data-theme-pref="dark">블랙</button></div>
         <div class="lg-theme-label">키 소리 · 진동</div>
         <div class="lg-theme-row"><button class="lg-theme-chip" data-sound-pref="on">켜짐</button><button class="lg-theme-chip" data-sound-pref="off">꺼짐</button></div>
         <button class="lg-backup-btn" id="backupOpenBtn">백업 · 내보내기</button>
@@ -1098,7 +1099,7 @@ function dc(c){
     return c;
   }
   function syncThemeChips(){
-    const pref=window.__lgThemePref();
+    const pref=window.__lgEffective(window.__lgThemePref());
     document.querySelectorAll("[data-theme-pref]").forEach((b)=>b.classList.toggle("active",b.dataset.themePref===pref));
   }
   window.__lgThemeChanged=()=>{ syncThemeChips(); render(); };
@@ -1886,7 +1887,15 @@ function dc(c){
   };
 
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => {}); });
+    (function () {
+    var hadController = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hadController || reloaded) return;
+      var a = document.activeElement; if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return;
+      reloaded = true; location.reload();
+    });
+    window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
+  })();
   }
 
   // 오프라인 중에 저장된 내용을 온라인 복귀 시 클라우드에 다시 반영
