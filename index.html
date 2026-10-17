@@ -1163,8 +1163,15 @@
       '<g class="kf"><rect x="3" y="0" width="26" height="23" rx="7" fill="url(#' + id + 'f)"/><rect x="3.5" y="0.5" width="25" height="22" rx="6.5" fill="none" stroke="rgba(255,255,255,.22)"/></g></svg>';
   }
 
+  function ratioDonutSrc(inPct) {
+    var dark = document.documentElement.getAttribute("data-theme") === "dark" || (function () { try { return window.matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) { return false; } })();
+    var g = dark ? "#7FD0A6" : "#2F6B4F", r = dark ? "#F2958A" : "#A8342F", C = 157.08, a = Math.max(0, Math.min(100, inPct)) / 100 * C;
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><g transform="rotate(-90 30 30)" fill="none" stroke-width="10"><circle cx="30" cy="30" r="25" stroke="' + r + '"/><circle cx="30" cy="30" r="25" stroke="' + g + '" stroke-dasharray="' + a + ' ' + C + '"/></g></svg>';
+    return "data:image/svg+xml," + encodeURIComponent(svg);
+  }
+
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v69";
+  var LG_VERSION = "v70";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1196,9 +1203,11 @@
       });
     }, 300);
   })();
-function dc(c){
+function lgForcedDark(){ try{ return document.documentElement.getAttribute("data-theme")!=="dark" && window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; } }
+  function dcc(c){ return dc(c, lgForcedDark()); }
+  function dc(c,f){
     if(!/^#[0-9a-fA-F]{6}$/.test(c||"")) return c;
-    if(document.documentElement.getAttribute("data-theme")==="dark"){
+    if(f||document.documentElement.getAttribute("data-theme")==="dark"){
       const n=parseInt(c.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
       const ch=CHARACTERS[curChar()];
       if(ch.dark){ const k=ch.pal.findIndex((x)=>x.toUpperCase()===c.toUpperCase()); if(k>=0) return ch.dark[k]; }
@@ -1625,7 +1634,7 @@ function dc(c){
       const midDeg = start + deg / 2;
       cursor = end;
       const it = getItem(name);
-      const color = dc(it ? it.color : "#8A7C52");
+      const color = dcc(it ? it.color : "#8A7C52");
       const anchor = polarXY(cx, cy, rOuter, midDeg);
       const side = Math.sin((midDeg * Math.PI) / 180) >= 0 ? "right" : "left";
       return { name, pctNum, color, path: donutSegmentPath(cx, cy, rOuter, rInner, start, end), anchor, side };
@@ -1645,7 +1654,7 @@ function dc(c){
     assignLabelY(leftSegs);
     assignLabelY(rightSegs);
 
-    const pathsSvg = segs.map((s) => '<path d="' + s.path + '" fill="' + s.color + '"></path>').join("");
+    const pathsSvg = '<image x="0" y="0" width="300" height="120" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120">' + segs.map((s) => '<path d="' + s.path + '" fill="' + s.color + '"/>').join("") + '</svg>') + '"/>';
     const labelsSvg = segs.map((s) => {
       const labelX = s.side === "left" ? cx - rOuter - 10 : cx + rOuter + 10;
       const textAnchor = s.side === "left" ? "end" : "start";
@@ -1793,7 +1802,7 @@ function dc(c){
       const outPctNum = 100 - inPctNum;
       const inDeg = (inPctNum / 100) * 360;
       chartEl.innerHTML =
-        '<div class="lg-ratio-donut" style="background: conic-gradient(var(--green-ink) 0deg ' + inDeg + 'deg, var(--red-ink) ' + inDeg + 'deg 360deg);"></div>' +
+        '<img class="lg-ratio-donut" alt="" src="' + ratioDonutSrc(inPctNum) + '">' +
         '<div class="lg-ratio-legend">' +
           '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background: var(--green-ink);"></span><span>입금</span><span class="lg-ratio-pct income">' + formatPct(inPctNum) + '</span></div>' +
           '<div class="lg-ratio-legend-row"><span class="lg-ratio-dot" style="background: var(--red-ink);"></span><span>출금</span><span class="lg-ratio-pct expense">' + formatPct(outPctNum) + '</span></div>' +
