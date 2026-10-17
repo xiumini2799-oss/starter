@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <title>잔액 관리 가계부</title>
-<meta name="color-scheme" content="light" />
+<meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#F4F5F7" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -12,12 +12,14 @@
 <script>
 (function(){
   var KEY="household-ledger-theme";
-  window.__lgThemePref=function(){var v=null;try{v=localStorage.getItem(KEY);}catch(e){} return v==="dark"?"dark":"light";}; /* 기본 화이트, 블랙은 옵션 */
+  window.__lgThemePref=function(){var v=null;try{v=localStorage.getItem(KEY);}catch(e){} return v==="dark"||v==="light"?v:"auto";}; /* 기본: 휴대폰 설정 따라가기(밝으면 화이트, 어두우면 블랙) */
+  window.__lgEffective=function(pref){ if(pref==="dark"||pref==="light") return pref; try{ return window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"; }catch(e){ return "light"; } };
+  try{ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(){ if(window.__lgThemePref()==="auto"){ window.__lgApplyTheme("auto"); if(window.__lgThemeChanged) window.__lgThemeChanged(); } }); }catch(e){}
   window.__lgApplyTheme=function(pref){
-    var t=pref==="dark"?"dark":"light";
+    var t=window.__lgEffective(pref);
     document.documentElement.setAttribute("data-theme",t);
     var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",t==="dark"?"#0B0B0D":"#F4F5F7");
-    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content",t==="dark"?"dark":"light");
+    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content","light dark");
   };
   window.__lgApplyTheme(window.__lgThemePref());
 })();
@@ -266,7 +268,7 @@
     --overlay:rgba(0,0,0,0.42); --shadow:rgba(0,0,0,0.12);
     --danger:#F04452; --danger-bg:#F04452; --on-danger:#fff;
     --tile:#F4F5F7; --track:#E8EAEE; --soft-line:#F2F3F5;
-    color-scheme: light; interpolate-size: allow-keywords;
+    color-scheme: light dark; interpolate-size: allow-keywords;
   }
   :root[data-theme="dark"] {
     --paper:#0B0B0D; --paper-line:#26272C; --ink:#F2F4F6; --ink-soft:#8B95A1;
@@ -454,6 +456,20 @@
   .lg-quick-panel.has-target .lg-quick-row { box-shadow: 0 0 0 2px color-mix(in srgb, var(--kc) 55%, transparent); }
   .lg-quick-row { transition: box-shadow .2s ease; }
   :root[data-char="jelly"] .lg-hero-char, :root[data-char="squish"] .lg-hero-char { height: 80px; right: 16px; bottom: 0; }
+
+  /* ---------- 키캡 말풍선 입력 ---------- */
+  .lg-bubble { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 12px 12px; padding: 7px 7px 7px 14px; border-radius: 16px;
+    background: color-mix(in srgb, var(--kc) 9%, var(--surface)); border: 1.5px solid color-mix(in srgb, var(--kc) 42%, transparent); --tail: 36px; }
+  .lg-bubble::before { content: ""; position: absolute; top: -8px; left: calc(var(--tail) - 7px); width: 12px; height: 12px; transform: rotate(45deg);
+    background: color-mix(in srgb, var(--kc) 9%, var(--surface)); border-left: 1.5px solid color-mix(in srgb, var(--kc) 42%, transparent); border-top: 1.5px solid color-mix(in srgb, var(--kc) 42%, transparent); border-top-left-radius: 3px; }
+  .lg-bubble.fresh { animation: lgBubble .22s ease both; transform-origin: var(--tail) 0; }
+  @keyframes lgBubble { from { opacity: 0; transform: translateY(-6px) scale(.96); } to { opacity: 1; transform: none; } }
+  .lg-bubble-input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 16px; color: var(--ink); padding: 9px 0; }
+  .lg-bubble-input::placeholder { color: var(--ink-soft); opacity: .7; }
+  .lg-bubble-add { border: none; border-radius: 12px; padding: 10px 16px; font: inherit; font-size: 14px; font-weight: 700; background: var(--btn, var(--ink)); color: var(--btn-ink, var(--surface)); cursor: pointer; }
+  .lg-bubble-add:active { transform: scale(.96); }
+  .lg-bubble-x { border: none; background: var(--tile); color: var(--ink-soft); width: 30px; height: 30px; border-radius: 50%; font-size: 17px; line-height: 1; padding: 0; cursor: pointer; }
+  .lg-bubble-err { flex-basis: 100%; margin: 0 0 2px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -496,7 +512,7 @@
         <button class="lg-logout-btn hidden" id="logoutBtn">로그아웃</button>
         <button class="lg-login-inline-btn hidden" id="loginBtnInline">구글로 로그인</button>
         <div class="lg-theme-label">화면 색</div>
-        <div class="lg-theme-row"><button class="lg-theme-chip" data-theme-pref="light">화이트</button><button class="lg-theme-chip" data-theme-pref="dark">블랙</button></div>
+        <div class="lg-theme-row"><button class="lg-theme-chip" data-theme-pref="auto">자동</button><button class="lg-theme-chip" data-theme-pref="light">화이트</button><button class="lg-theme-chip" data-theme-pref="dark">블랙</button></div>
         <div class="lg-theme-label">키 소리 · 진동</div>
         <div class="lg-theme-row"><button class="lg-theme-chip" data-sound-pref="on">켜짐</button><button class="lg-theme-chip" data-sound-pref="off">꺼짐</button></div>
         <button class="lg-backup-btn" id="backupOpenBtn">백업 · 내보내기</button>
@@ -978,26 +994,47 @@
   })();
 
   /* 키캡으로 항목 고르기 → 내용·금액만 입력 */
-  var selectedItem = null;
+  var selectedItem = null, bubbleDraft = "", bubbleFresh = false, refocusBubble = false;
+  function parseEntry(raw) {
+    raw = raw.trim().replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
+    if (!raw) return null;
+    var tokens = raw.split(/\s+/), m = tokens[tokens.length - 1].match(/^(-?)(\d+)$/);
+    if (!m) return { err: "금액을 숫자로 적어주세요 (예: 점심 -9000)" };
+    return { type: m[1] === "-" ? "out" : "in", amount: Number(m[2]), memo: tokens.slice(0, tokens.length - 1).join(" ") };
+  }
+  function bubbleError(msg) {
+    var box = document.querySelector(".lg-bubble-err"); if (!box) return;
+    box.textContent = msg; box.classList.remove("hidden");
+    clearTimeout(bubbleError._t); bubbleError._t = setTimeout(function () { box.classList.add("hidden"); }, 2600);
+  }
+  function submitBubble() {
+    var inp = document.querySelector(".lg-bubble-input"); if (!inp || !selectedItem) return;
+    var e = parseEntry(inp.value); if (!e) return;
+    if (e.err) { bubbleError(e.err); return; }
+    bubbleDraft = ""; refocusBubble = true;
+    addTransaction(selectedItem, e.type, e.amount, e.memo, todayISO());
+  }
   function applySelectionUI() {
     if (selectedItem && !getItem(selectedItem)) selectedItem = null;
+    var selCard = null;
     document.querySelectorAll("[data-key]").forEach(function (el) {
       var on = el.getAttribute("data-key") === selectedItem;
       el.classList.toggle("sel", on);
-      var card = el.closest(".lg-item-card"); if (card) card.classList.toggle("sel", on);
+      var card = el.closest(".lg-item-card"); if (card) { card.classList.toggle("sel", on); if (on) selCard = card; }
     });
-    var t = document.getElementById("quickTarget"), inp = document.getElementById("quickInput"), panel = document.querySelector(".lg-quick-panel");
-    if (!t || !inp) return;
-    if (selectedItem) {
-      var it = getItem(selectedItem);
-      t.style.setProperty("--kc", dc(it.color)); panel.style.setProperty("--kc", dc(it.color));
-      t.innerHTML = '<span class="lg-qt-dot"></span><span class="lg-qt-name">' + esc(selectedItem) + '</span><span>에 기록</span><button type="button" id="quickTargetClear" aria-label="선택 해제">×</button>';
-      t.classList.remove("hidden"); panel.classList.add("has-target");
-      inp.placeholder = "내용 금액 (예: 점심 -9000)";
-    } else {
-      t.classList.add("hidden"); t.innerHTML = ""; panel.classList.remove("has-target");
-      inp.placeholder = "항목 키를 누른 뒤 입력";
-    }
+    var old = document.querySelector(".lg-bubble"); if (old) old.remove();
+    var inp = document.getElementById("quickInput");
+    if (inp) inp.placeholder = "예: 점심 -9000 식비";
+    if (!selCard) return;
+    var head = selCard.querySelector(".lg-item-head"), key = selCard.querySelector("[data-key]");
+    var bub = document.createElement("div");
+    bub.className = "lg-bubble" + (bubbleFresh ? " fresh" : "");
+    bub.innerHTML = '<input class="lg-bubble-input" type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" placeholder="내용 금액 (예: 점심 -9000)"><button type="button" class="lg-bubble-add">추가</button><button type="button" class="lg-bubble-x" aria-label="닫기">×</button><div class="lg-error lg-bubble-err hidden"></div>';
+    head.after(bub);
+    var bi = bub.querySelector("input"); bi.value = bubbleDraft;
+    try { var kr = key.getBoundingClientRect(), br = bub.getBoundingClientRect(); bub.style.setProperty("--tail", (kr.left + kr.width / 2 - br.left) + "px"); } catch (e) {}
+    if (bubbleFresh || refocusBubble) { try { bi.focus(); } catch (e) {} }
+    bubbleFresh = false; refocusBubble = false;
   }
   (function setupKeycaps() {
     var list = document.getElementById("itemList");
@@ -1009,13 +1046,15 @@
       var k = e.target.closest("[data-key]"); if (!k) return;
       e.stopPropagation(); e.preventDefault();
       var name = k.getAttribute("data-key");
-      selectedItem = selectedItem === name ? null : name;
+      if (selectedItem === name) { selectedItem = null; } else { selectedItem = name; bubbleDraft = ""; bubbleFresh = true; }
       applySelectionUI();
-      if (selectedItem) { try { document.getElementById("quickInput").focus({ preventScroll: true }); } catch (err) {} }
     }, true);
-    document.getElementById("quickTarget").addEventListener("click", function (e) {
-      if (e.target.closest("#quickTargetClear")) { selectedItem = null; applySelectionUI(); }
+    list.addEventListener("click", function (e) {
+      if (e.target.closest(".lg-bubble-add")) { e.stopPropagation(); submitBubble(); }
+      else if (e.target.closest(".lg-bubble-x")) { e.stopPropagation(); selectedItem = null; applySelectionUI(); }
     });
+    list.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("lg-bubble-input")) { e.preventDefault(); submitBubble(); } });
+    list.addEventListener("input", function (e) { if (e.target.classList && e.target.classList.contains("lg-bubble-input")) bubbleDraft = e.target.value; });
     function syncSoundChips() { document.querySelectorAll("[data-sound-pref]").forEach(function (b) { b.classList.toggle("active", (b.getAttribute("data-sound-pref") === "on") === KeySound.enabled); }); }
     document.querySelectorAll("[data-sound-pref]").forEach(function (b) {
       b.onclick = function () { KeySound.setEnabled(b.getAttribute("data-sound-pref") === "on"); syncSoundChips(); if (KeySound.enabled) { KeySound.down(); setTimeout(function () { KeySound.up(); }, 90); } };
@@ -1034,23 +1073,19 @@
     var raw = input.value.trim().replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
     if (!raw) return;
     var tokens = raw.split(/\s+/);
-    if (selectedItem) {
-      var m1 = tokens[tokens.length - 1].match(/^(-?)(\d+)$/);
-      if (!m1) { showQuickError("금액을 숫자로 적어주세요 (예: 점심 -9000)"); return; }
-      addTransaction(selectedItem, m1[1] === "-" ? "out" : "in", Number(m1[2]), tokens.slice(0, tokens.length - 1).join(" "), todayISO());
-      input.value = "";
-      return;
+    var mLast = tokens[tokens.length - 1].match(/^(-?)(\d+)$/);
+    if (mLast && selectedItem) { /* 키캡을 눌러 둔 상태: 내용 금액만 */
+      addTransaction(selectedItem, mLast[1] === "-" ? "out" : "in", Number(mLast[2]), tokens.slice(0, tokens.length - 1).join(" "), todayISO());
+      input.value = ""; return;
     }
-    /* 예전 방식(내용 금액 분류)도 계속 지원 */
-    if (tokens.length >= 2) {
+    if (tokens.length >= 2) { /* 내용 금액 항목 */
       var m = tokens[tokens.length - 2].match(/^(-?)(\d+)$/);
       if (m) {
         addTransaction(tokens[tokens.length - 1], m[1] === "-" ? "out" : "in", Number(m[2]), tokens.slice(0, tokens.length - 2).join(" "), todayISO());
-        input.value = "";
-        return;
+        input.value = ""; return;
       }
     }
-    showQuickError("항목 키를 먼저 눌러주세요");
+    showQuickError("이렇게 적어주세요: 예: 점심 -9000 식비. 또는 항목 키를 눌러 바로 입력해요");
   }
 
 function dc(c){
