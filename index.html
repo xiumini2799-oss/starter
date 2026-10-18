@@ -1136,7 +1136,17 @@
       if (selectedItem === name) { selectedItem = null; } else { selectedItem = name; bubbleDraft = ""; bubbleFresh = true; }
       applySelectionUI();
       var dy = k.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy);
+      /* 키캡은 선택만: 입력창 포커스(키보드)를 풀고, 잠깐 동안 스크롤 위치가 튀지 않게 고정 */
+      var qi = document.getElementById("quickInput"); if (qi && document.activeElement === qi) qi.blur();
+      var tgt = window.scrollY, t0 = Date.now(), stop = false;
+      var halt = function () { stop = true; };
+      window.addEventListener("touchstart", halt, { once: true, passive: true }); window.addEventListener("wheel", halt, { once: true, passive: true });
+      (function tick() { if (stop || Date.now() - t0 > 600) return; if (Math.abs(window.scrollY - tgt) > 1) window.scrollTo(0, tgt); requestAnimationFrame(tick); })();
     }, true);
+    (function typingSound() { /* 입력창에 타자를 칠 때도 키캡과 같은 소리 */
+      var qi = document.getElementById("quickInput"); if (!qi) return;
+      qi.addEventListener("input", function () { KeySound.down(); setTimeout(function () { KeySound.up(); }, 55); });
+    })();
     list.addEventListener("click", function (e) {
       if (e.target.closest(".lg-bubble-add")) { e.stopPropagation(); submitBubble(); }
       else if (e.target.closest(".lg-bubble-x")) { e.stopPropagation(); selectedItem = null; applySelectionUI(); }
@@ -1252,7 +1262,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v80";
+  var LG_VERSION = "v81";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
