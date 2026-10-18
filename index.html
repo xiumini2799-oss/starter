@@ -556,7 +556,7 @@
   @keyframes lgGFloat { 0% { opacity: 0; transform: translateY(14px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
 
   .lg-g-tip { border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
-  .lg-g-tip::after { content: ""; position: absolute; left: 16px; bottom: -6px; width: 12px; height: 7px; background: inherit; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+  .lg-g-tip::after { content: ""; position: absolute; left: 16px; bottom: -6px; width: 12px; height: 7px; background: var(--ink); clip-path: polygon(0 0, 100% 0, 50% 100%); }
   .lg-g-tip2::after { left: auto; right: 34px; bottom: auto; top: -6px; clip-path: polygon(50% 0, 0 100%, 100% 100%); }
   .lg-g-tip { top: 8px; }
 </style>
@@ -1293,7 +1293,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v94";
+  var LG_VERSION = "v95";
   var GUIDE_REV = "91"; /* 안내 화면 내용을 바꿀 때만 이 숫자를 올려요. 올리면 모든 사용자에게 한 번 다시 보여요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
