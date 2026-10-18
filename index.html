@@ -527,6 +527,9 @@
   .lg-dlg-cancel { background: var(--tile); color: var(--ink); }
   .lg-dlg-ok { background: var(--ink); color: var(--surface); }
   .lg-dlg-ok.danger { background: #E5484D; color: #fff; }
+  html { min-height: 100vh; min-height: 100dvh; background-color: var(--paper); }
+  body { min-height: 100vh; min-height: 100dvh; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  .lg-header-right { gap: 0; }
 </style>
 </head>
 <body>
@@ -559,7 +562,6 @@
     <div class="lg-header">
       <div class="lg-title">잔액 관리 가계부</div>
       <div class="lg-header-right">
-        <button class="lg-save-small-btn" id="saveBtn">저장</button>
         <button class="lg-account-btn" id="accountBtn">＋</button>
       </div>
       <div class="lg-account-panel" id="accountPanel">
@@ -630,7 +632,7 @@
       <div class="lg-quick-panel">
         <div id="quickTarget" class="lg-quick-target hidden"></div>
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="항목 키를 누른 뒤 입력" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: 식비 -9000 점심" enterkeyhint="done" autocomplete="off" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
         <div id="quickError" class="lg-error hidden"></div>
@@ -885,7 +887,7 @@
     const el = document.getElementById("syncNote");
     if (!el) return;
     el.textContent = text;
-    if (/^(저장 완료|클라우드에 저장됨) ·/.test(text)) return; /* 평소 저장은 조용히 */
+    if (!/실패|오류|옮겼/.test(text)) return; /* 평소 저장·오프라인 저장은 조용히 */
     el.classList.add("show"); clearTimeout(setSyncNote._t); setSyncNote._t = setTimeout(() => el.classList.remove("show"), 3200);
   }
 
@@ -1108,7 +1110,7 @@
     if (!selCard) {
       if (chip) chip.remove();
       if (panel) panel.classList.remove("has-target");
-      if (inp) inp.placeholder = "예: 점심 -9000 식비";
+      if (inp) inp.placeholder = "예: 식비 -9000 점심";
       return;
     }
     var kcv = selCard.querySelector("[data-key]").style.getPropertyValue("--kc") || "#8A7C52";
@@ -1116,7 +1118,7 @@
     if (!chip && row) { chip = document.createElement("button"); chip.type = "button"; chip.className = "lg-sel-chip"; chip.setAttribute("aria-label", "선택 해제"); row.insertBefore(chip, inp); }
     if (chip) chip.innerHTML = kcSvg(kcv) + '<span class="lg-sel-name"></span>';
     if (chip) chip.querySelector(".lg-sel-name").textContent = selectedItem;
-    if (inp) inp.placeholder = "예: 점심 -9000";
+    if (inp) inp.placeholder = "예: -9000 점심";
   }
   (function setupKeycaps() {
     var list = document.getElementById("itemList");
@@ -1160,20 +1162,17 @@
     var qe = document.getElementById("quickError"); if (qe) qe.classList.add("hidden");
     var raw = input.value.trim().replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
     if (!raw) return;
-    var tokens = raw.split(/\s+/);
-    var mLast = tokens[tokens.length - 1].match(/^(-?)(\d+)$/);
-    if (mLast && selectedItem) { /* 키캡을 눌러 둔 상태: 내용 금액만 */
-      addTransaction(selectedItem, mLast[1] === "-" ? "out" : "in", Number(mLast[2]), tokens.slice(0, tokens.length - 1).join(" "), todayISO());
-      input.value = ""; return;
+    KeySound.down(); setTimeout(function () { KeySound.up(); }, 70); /* 키캡과 같은 소리 */
+    var tokens = raw.split(/\s+/), re = /^(-?)(\d+)$/, m;
+    function add(item, mm, memo) { addTransaction(item, mm[1] === "-" ? "out" : "in", Number(mm[2]), memo, todayISO()); input.value = ""; }
+    if (selectedItem) { /* 키캡을 눌러 둔 상태: 금액 내용 */
+      if ((m = tokens[0].match(re))) return add(selectedItem, m, tokens.slice(1).join(" "));
+      if (tokens.length >= 2 && (m = tokens[tokens.length - 1].match(re))) return add(selectedItem, m, tokens.slice(0, -1).join(" "));
+    } else { /* 항목 금액 내용 */
+      if (tokens.length >= 2 && (m = tokens[1].match(re))) return add(tokens[0], m, tokens.slice(2).join(" "));
+      if (tokens.length >= 3 && (m = tokens[tokens.length - 2].match(re))) return add(tokens[tokens.length - 1], m, tokens.slice(0, -2).join(" "));
     }
-    if (tokens.length >= 2) { /* 내용 금액 항목 */
-      var m = tokens[tokens.length - 2].match(/^(-?)(\d+)$/);
-      if (m) {
-        addTransaction(tokens[tokens.length - 1], m[1] === "-" ? "out" : "in", Number(m[2]), tokens.slice(0, tokens.length - 2).join(" "), todayISO());
-        input.value = ""; return;
-      }
-    }
-    showQuickError("이렇게 적어주세요: 예: 점심 -9000 식비. 또는 항목 키를 눌러 바로 입력해요");
+    showQuickError("이렇게 적어주세요: 항목 금액 내용 (예: 식비 -9000 점심). 또는 항목 키를 눌러 금액 내용만 입력해요");
   }
 
 
@@ -1253,7 +1252,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v79";
+  var LG_VERSION = "v80";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1270,8 +1269,8 @@
       ov.innerHTML = '<div class="lg-guide-card">' +
         '<div class="lg-guide-title">눌러보세요!</div>' +
         '<div class="lg-guide-sub">키캡을 누르면 바로 기록할 수 있어요</div>' +
-        '<div class="lg-guide-demo"><button type="button" class="lg-guide-key" aria-label="키캡 눌러보기"></button><div class="lg-guide-bubble hidden">점심 -9000</div></div>' +
-        '<ol class="lg-guide-steps"><li>항목 옆 <b>키캡</b>을 눌러요</li><li><b>내용, 금액</b>을 입력해요<br><span>지출은 -9000, 수입은 그냥 숫자</span></li><li><b>추가</b>를 누르면 끝!</li></ol>' +
+        '<div class="lg-guide-demo"><button type="button" class="lg-guide-key" aria-label="키캡 눌러보기"></button><div class="lg-guide-bubble hidden">-9000 점심</div></div>' +
+        '<ol class="lg-guide-steps"><li>항목 옆 <b>키캡</b>을 눌러요</li><li><b>금액, 내용</b>을 입력해요<br><span>지출은 -9000, 수입은 그냥 숫자</span></li><li><b>추가</b>를 누르면 끝!</li></ol>' +
         '<div class="lg-guide-note">항목은 \'항목 관리\'에서 추가·삭제해요</div>' +
         '<button type="button" class="lg-guide-go">시작하기</button></div>';
       document.body.appendChild(ov);
@@ -1519,7 +1518,6 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     saveLocal();
     if (firebaseReady && currentUser && window.__lgSaveCloud) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
-        setSyncNote("오프라인 - 이 기기에 저장 완료 (온라인 시 자동 반영)");
         return;
       }
       await window.__lgSaveCloud(state);
@@ -2051,7 +2049,9 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
   document.getElementById("newItemName").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("addItemBtn").click(); });
   document.getElementById("newItemBalance").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("addItemBtn").click(); });
 
-  document.getElementById("saveBtn").onclick = () => saveState();
+  const lgFlush = () => { try { state.updatedAt = Date.now(); saveLocal(); } catch (e) {} };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { lgFlush(); if (currentUser && firebaseReady && window.__lgSaveCloud && navigator.onLine !== false) window.__lgSaveCloud(state); } });
+  window.addEventListener("pagehide", lgFlush);
 
   document.querySelectorAll(".lg-tab-btn").forEach((btn) => {
     btn.onclick = () => {
