@@ -1288,8 +1288,9 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v87";
-  var FLAG_GUIDE = "household-ledger-guide-seen-v2"; /* 새 안내 화면: 기존 사용자에게도 한 번 보여줌 */
+  var LG_VERSION = "v89";
+  var GUIDE_REV = "88"; /* 안내 화면 내용을 바꿀 때만 이 숫자를 올려요. 올리면 모든 사용자에게 한 번 다시 보여요 */
+  var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
     if (document.getElementById("lgGuide")) return;
     var FLAG = FLAG_GUIDE;
@@ -1348,6 +1349,9 @@
   }
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
+    try { /* 지난 버전의 표시는 지워서 저장 공간에 쌓이지 않게 */
+      Object.keys(localStorage).forEach(function (k) { if (k.indexOf("household-ledger-guide-seen") === 0 && k !== FLAG_GUIDE) localStorage.removeItem(k); });
+    } catch (e) {}
     try { if (localStorage.getItem(FLAG_GUIDE)) return; } catch (e) {}
     var tries = 0;
     var iv = setInterval(function () {
