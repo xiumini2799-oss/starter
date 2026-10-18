@@ -343,9 +343,9 @@
   .lg-item-dot { width: 40px; height: 40px; border-radius: 14px; }
   .lg-manage-row .lg-item-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; filter: none; font-size: 0; }
   .lg-item-name { font-size: 16px; font-weight: 600; }
-  .lg-item-balance { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; }
+  .lg-item-balance { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
   .lg-item-body { border-top: 1px solid var(--soft-line); padding: 6px 20px 20px; overflow: hidden; }
-  .lg-item-card.open .lg-item-body { animation: lgOpen .3s ease both; }
+  .lg-item-card.open.anim .lg-item-body { animation: lgOpen .3s ease both; }
   .lg-item-card.open.closing .lg-item-body { animation: lgClose .22s ease both; }
   .lg-history-label { margin-top: 10px; }
   .lg-month-header { background: var(--tile); border-radius: 10px; padding: 7px 10px; }
@@ -359,7 +359,7 @@
 
   /* 전체 내역 */
   .lg-panel { border: none; border-radius: 26px; background: var(--surface); padding: 22px 20px; }
-  .lg-section-title { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; }
+  .lg-section-title { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
   .lg-hist-nav-btn { font-size: 22px; color: var(--ink); }
   .lg-hist-month-label { font-size: 15px; }
   .lg-hist-all-btn { border: none; background: var(--tile); border-radius: 10px; padding: 7px 12px; font-weight: 600; }
@@ -367,7 +367,7 @@
   .lg-range-chip { border: none; background: var(--tile); border-radius: 10px; font-weight: 600; }
   .lg-range-chip.active { background: var(--ink); color: var(--paper); }
   .lg-stamp { background: var(--tile); border-radius: 16px; padding: 14px 4px; }
-  .lg-stamp-value { font-weight: 800; letter-spacing: -0.03em; }
+  .lg-stamp-value { font-weight: 800; letter-spacing: -0.02em; }
   .lg-ratio-donut::after { background: var(--surface); }
   .lg-empty { border: none; background: var(--tile); border-radius: 18px; padding: 24px 14px; }
   .lg-empty::before { content: ""; display: block; width: 72px; height: 72px; margin: 0 auto 10px; background: var(--avatar, url(./char-head.png)) center / contain no-repeat; image-rendering: pixelated; }
@@ -378,7 +378,7 @@
   /* 팝업·배너 */
   .lg-modal-backdrop:not(.hidden) { animation: lgFade .2s ease; }
   .lg-modal { border: none; border-radius: 28px; padding: 26px 24px 22px; background: var(--surface); animation: lgPopUp .28s cubic-bezier(.2,.9,.3,1.12); }
-  .lg-modal-title { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; }
+  .lg-modal-title { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
   .lg-modal-row button, .lg-modal-actions button { border: none; background: var(--tile); border-radius: 16px; padding: 14px; color: var(--ink); }
   .lg-modal-row button.danger { background: var(--danger-bg); color: var(--on-danger); }
   .lg-guest-warn, .lg-install-banner { border: none; border-radius: 20px; background: var(--warn-bg); padding: 16px 18px; }
@@ -479,22 +479,7 @@
 
   html, body { overscroll-behavior-y: none; }
   .lg-version { margin-top: 10px; font-size: 11px; color: var(--ink-soft); text-align: center; }
-  .lg-guide { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; padding: 20px; animation: lgGuideIn .25s ease; }
-  .lg-guide.out { opacity: 0; transition: opacity .25s; }
   @keyframes lgGuideIn { from { opacity: 0; } to { opacity: 1; } }
-  .lg-guide-card { width: 100%; max-width: 340px; background: var(--surface); color: var(--ink); border-radius: 24px; padding: 26px 22px 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
-  .lg-guide-title { font-size: 22px; font-weight: 800; }
-  .lg-guide-sub { margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
-  .lg-guide-demo { position: relative; height: 96px; margin: 16px 0 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-  .lg-guide-key { width: 52px; height: 52px; border: none; padding: 0; border-radius: 12px; background: linear-gradient(#7fa6ee, #4f7fd8); box-shadow: 0 5px 0 #34589e, 0 8px 14px rgba(0,0,0,.25); cursor: pointer; animation: lgGuidePulse 1.4s ease-in-out infinite; -webkit-tap-highlight-color: transparent; }
-  .lg-guide-key.down { transform: translateY(4px); box-shadow: 0 1px 0 #34589e; animation: none; }
-  @keyframes lgGuidePulse { 0%,100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
-  .lg-guide-bubble { margin-top: 16px; padding: 8px 14px; border-radius: 14px; background: color-mix(in srgb, #4f7fd8 12%, var(--surface)); border: 1px solid color-mix(in srgb, #4f7fd8 35%, transparent); font-size: 14px; font-weight: 600; }
-  .lg-guide-bubble.hidden { display: none; }
-  .lg-guide-steps { text-align: left; margin: 10px 0 0; padding-left: 22px; font-size: 14px; line-height: 1.7; }
-  .lg-guide-steps span { font-size: 12px; color: var(--ink-soft); }
-  .lg-guide-note { margin-top: 12px; font-size: 12px; color: var(--ink-soft); }
-  .lg-guide-go { margin-top: 16px; width: 100%; padding: 14px; border: none; border-radius: 14px; background: var(--ink); color: var(--surface); font-size: 15px; font-weight: 700; cursor: pointer; }
 
   .lg-kb #itemList { padding-bottom: 45vh; }
 
@@ -530,6 +515,38 @@
   html { min-height: 100vh; min-height: 100dvh; background-color: var(--paper); }
   body { min-height: 100vh; min-height: 100dvh; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
   .lg-header-right { gap: 0; }
+
+  #quickError.lg-error { font-size: 13px; line-height: 1.5; color: var(--ink-soft); background: var(--glass6, rgba(127,127,127,.12)); border-radius: 12px; padding: 9px 14px; margin: 8px 4px 0; text-align: left; animation: lgFadeUp .2s ease; }
+
+  .lg-guide { position: fixed; inset: 0; z-index: 9999; background: var(--surface); display: flex; justify-content: center; overflow-y: auto; animation: lgGuideIn .25s ease; }
+  .lg-guide.out { opacity: 0; transition: opacity .25s; }
+  .lg-g-wrap { width: 100%; max-width: 480px; margin: 0 auto; padding: 56px 24px max(28px, env(safe-area-inset-bottom)); color: var(--ink); display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box; }
+  .lg-g-head h2 { margin: 0; font-size: 28px; line-height: 1.35; font-weight: 800; letter-spacing: -0.02em; }
+  .lg-g-head p { margin: 10px 0 0; font-size: 15px; color: var(--ink-soft); }
+  .lg-g-stage { margin-top: 28px; background: var(--paper); border-radius: 24px; padding: 14px 14px 12px; }
+  .lg-g-input { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 16px; padding: 7px 7px 7px 12px; min-height: 48px; }
+  .lg-g-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px 4px 6px; border-radius: 999px; background: var(--paper); font-size: 13px; animation: lgFadeUp .18s ease; }
+  .lg-g-chip.hidden { display: none; }
+  .lg-g-chip .lg-kc-svg { width: 22px; height: 22px; }
+  .lg-g-ph { flex: 1; font-size: 14px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; }
+  .lg-g-ph.typed { color: var(--ink); font-weight: 500; }
+  .lg-g-add { background: var(--ink); color: var(--surface); border-radius: 12px; padding: 10px 15px; font-size: 14px; font-weight: 700; }
+  .lg-g-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 40px 6px 6px; }
+  .lg-g-tip { position: absolute; left: -2px; top: 6px; background: var(--ink); color: var(--surface); font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 10px; animation: lgGTip 1.4s ease-in-out infinite; }
+  .lg-g-tip::after { content: ""; position: absolute; left: 16px; bottom: -4px; width: 9px; height: 9px; background: var(--ink); transform: rotate(45deg); border-radius: 2px; }
+  @keyframes lgGTip { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  .lg-g-key { border: none; background: none; padding: 0; width: 32px; height: 32px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .lg-g-key .kf { transition: transform .06s; }
+  .lg-g-key.down .kf { transform: translateY(3px); }
+  .lg-g-name { flex: 1; font-size: 16px; font-weight: 600; }
+  .lg-g-bal { font-size: 16px; font-weight: 800; }
+  .lg-g-steps { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+  .lg-g-steps li { display: flex; align-items: flex-start; gap: 14px; }
+  .lg-g-steps i { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--paper); color: var(--ink); font-style: normal; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .lg-g-steps b { display: block; font-size: 16px; font-weight: 700; line-height: 1.4; }
+  .lg-g-steps span { display: block; margin-top: 2px; font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+  .lg-g-foot { margin: 26px 0 24px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+  .lg-g-go { margin-top: auto; width: 100%; height: 56px; border: none; border-radius: 18px; background: var(--ink); color: var(--surface); font: 700 17px 'Noto Sans KR', sans-serif; letter-spacing: -0.01em; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -1165,7 +1182,9 @@
   function showQuickError(msg) {
     var box = document.getElementById("quickError"); if (!box) return;
     box.textContent = msg; box.classList.remove("hidden");
-    clearTimeout(showQuickError._t); showQuickError._t = setTimeout(function () { box.classList.add("hidden"); }, 2600);
+    clearTimeout(showQuickError._t); /* 고치기 시작하면 사라지고, 그 전에는 계속 보여요 */
+    var qi = document.getElementById("quickInput");
+    if (qi && !qi._lgErrHide) { qi._lgErrHide = true; qi.addEventListener("input", function () { box.classList.add("hidden"); }); }
   }
   function handleQuickAdd() {
     var input = document.getElementById("quickInput");
@@ -1182,7 +1201,7 @@
       if (tokens.length >= 2 && (m = tokens[1].match(re))) return add(tokens[0], m, tokens.slice(2).join(" "));
       if (tokens.length >= 3 && (m = tokens[tokens.length - 2].match(re))) return add(tokens[tokens.length - 1], m, tokens.slice(0, -2).join(" "));
     }
-    showQuickError("이렇게 적어주세요: 항목 금액 내용 (예: 식비 -9000 점심). 또는 항목 키를 눌러 금액 내용만 입력해요");
+    showQuickError(selectedItem ? "이렇게 적어볼까요? -9000 점심" : "이렇게 적어볼까요? 식비 -9000 점심");
   }
 
 
@@ -1262,36 +1281,49 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v81";
+  var LG_VERSION = "v86";
+  var FLAG_GUIDE = "household-ledger-guide-seen-v2"; /* 새 안내 화면: 기존 사용자에게도 한 번 보여줌 */
+  function showGuide() {
+    if (document.getElementById("lgGuide")) return;
+    var FLAG = FLAG_GUIDE;
+    var ov = document.createElement("div"); ov.id = "lgGuide"; ov.className = "lg-guide";
+    ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+    ov.innerHTML = '<div class="lg-g-wrap">' +
+      '<div class="lg-g-head"><h2>키캡을 눌러<br>바로 기록해요</h2><p>입력은 한 줄이면 충분해요</p></div>' +
+      '<div class="lg-g-stage">' +
+        '<div class="lg-g-input"><span class="lg-g-chip hidden">' + kcSvg("#6F7F9C") + '<b>용돈</b></span><span class="lg-g-ph">예: 식비 -9000 점심</span><span class="lg-g-add">추가</span></div>' +
+        '<div class="lg-g-item"><span class="lg-g-tip">눌러보세요</span><button type="button" class="lg-g-key" aria-label="키캡 눌러보기">' + kcSvg("#6F7F9C") + '</button><span class="lg-g-name">용돈</span><span class="lg-g-bal">253,583원</span></div>' +
+      '</div>' +
+      '<ol class="lg-g-steps">' +
+        '<li><i>1</i><div><b>항목 옆 키캡을 눌러요</b><span>입력창에 항목이 골라져요</span></div></li>' +
+        '<li><i>2</i><div><b>금액과 내용을 적고 추가를 눌러요</b><span>지출은 -9000, 수입은 그냥 숫자예요</span></div></li>' +
+        '<li><i>3</i><div><b>금액을 누르면 세부내역이 떠요</b><span>항목별 거래 내역을 한눈에 볼 수 있어요</span></div></li>' +
+      '</ol>' +
+      '<div class="lg-g-foot">항목은 \'항목 관리\'에서 추가·삭제할 수 있어요</div>' +
+      '<button type="button" class="lg-g-go">시작하기</button></div>';
+    document.body.appendChild(ov);
+    var key = ov.querySelector(".lg-g-key"), chip = ov.querySelector(".lg-g-chip"), ph = ov.querySelector(".lg-g-ph");
+    key.addEventListener("pointerdown", function () {
+      key.classList.add("down"); KeySound.down(); var tp = ov.querySelector(".lg-g-tip"); if (tp) tp.remove();
+      var on = chip.classList.toggle("hidden") === false; ph.textContent = on ? "-9000 점심" : "예: 식비 -9000 점심"; ph.classList.toggle("typed", on);
+    }, { passive: true });
+    var up = function () { if (key.classList.contains("down")) { key.classList.remove("down"); KeySound.up(); } };
+    key.addEventListener("pointerup", up); key.addEventListener("pointercancel", up); key.addEventListener("pointerleave", up);
+    ov.querySelector(".lg-g-go").addEventListener("click", function () {
+      try { localStorage.setItem(FLAG, "1"); } catch (e) {}
+      ov.classList.add("out"); setTimeout(function () { ov.remove(); }, 250);
+    });
+  }
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
-    var FLAG = "household-ledger-guide-seen";
-    try { if (localStorage.getItem(FLAG)) return; } catch (e) {}
+    try { if (localStorage.getItem(FLAG_GUIDE)) return; } catch (e) {}
     var tries = 0;
     var iv = setInterval(function () {
       if (++tries > 600) { clearInterval(iv); return; }
-      var app = document.getElementById("appScreen"), gw = document.getElementById("guestWarn");
+      var app = document.getElementById("appScreen");
       if (!app || app.classList.contains("hidden")) return;
-      if (gw && !gw.classList.contains("hidden")) return;
       clearInterval(iv);
-      var ov = document.createElement("div"); ov.id = "lgGuide"; ov.className = "lg-guide";
-      ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
-      ov.innerHTML = '<div class="lg-guide-card">' +
-        '<div class="lg-guide-title">눌러보세요!</div>' +
-        '<div class="lg-guide-sub">키캡을 누르면 바로 기록할 수 있어요</div>' +
-        '<div class="lg-guide-demo"><button type="button" class="lg-guide-key" aria-label="키캡 눌러보기"></button><div class="lg-guide-bubble hidden">-9000 점심</div></div>' +
-        '<ol class="lg-guide-steps"><li>항목 옆 <b>키캡</b>을 눌러요</li><li><b>금액, 내용</b>을 입력해요<br><span>지출은 -9000, 수입은 그냥 숫자</span></li><li><b>추가</b>를 누르면 끝!</li></ol>' +
-        '<div class="lg-guide-note">항목은 \'항목 관리\'에서 추가·삭제해요</div>' +
-        '<button type="button" class="lg-guide-go">시작하기</button></div>';
-      document.body.appendChild(ov);
-      var key = ov.querySelector(".lg-guide-key"), bub = ov.querySelector(".lg-guide-bubble");
-      key.addEventListener("pointerdown", function () { key.classList.add("down"); KeySound.down(); bub.classList.remove("hidden"); }, { passive: true });
-      var up = function () { if (key.classList.contains("down")) { key.classList.remove("down"); KeySound.up(); } };
-      key.addEventListener("pointerup", up); key.addEventListener("pointercancel", up); key.addEventListener("pointerleave", up);
-      ov.querySelector(".lg-guide-go").addEventListener("click", function () {
-        try { localStorage.setItem(FLAG, "1"); } catch (e) {}
-        ov.classList.add("out"); setTimeout(function () { ov.remove(); }, 250);
-      });
+      showGuide();
     }, 300);
   })();
 function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(화이트/블랙) 그대로 */
@@ -1828,7 +1860,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
                 ' · 이월 ' + formatWon(g.opening) + '</div>' + txHtml + '</div>';
             }).join("");
 
-        return '<div class="lg-item-card' + (isOpen ? ' open' : '') + (selectedItem === item ? ' sel' : '') + '" data-item="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' +
+        return '<div class="lg-item-card' + (isOpen ? ' open' + (window.__lgAnim ? ' anim' : '') : '') + (selectedItem === item ? ' sel' : '') + '" data-item="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' +
           '<div class="lg-item-head" data-toggle="' + esc(item) + '">' +
             '<div class="lg-item-name-row"><span class="lg-item-dot lg-keycap' + (selectedItem === item ? ' sel' : '') + '" data-key="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' + kcSvg(dc(it.color)) + '</span>' +
             '<span class="lg-item-name">' + esc(item) + '</span></div>' +
@@ -1929,7 +1961,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
       el.onclick = (ev) => {
         if (!ev.target.closest(".lg-item-balance")) return;
         const item = el.getAttribute("data-toggle");
-        const apply = () => { openItem = openItem === item ? null : item; editingTxId = null; render(); };
+        const apply = () => { openItem = openItem === item ? null : item; editingTxId = null; window.__lgAnim = !!openItem; render(); window.__lgAnim = false; };
         const card = el.closest(".lg-item-card");
         if (openItem === item && card && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) { card.classList.add("closing"); setTimeout(apply, 220); }
         else apply();
