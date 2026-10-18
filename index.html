@@ -514,6 +514,19 @@
   .lg-item-head:active { background: transparent; }
   .lg-item-balance { padding: 12px 8px; margin: -12px -8px; cursor: pointer; border-radius: 12px; }
   .lg-item-balance:active { background: var(--tile); }
+
+  .lg-sync-note { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%) translateY(6px); margin: 0; min-height: 0; padding: 9px 16px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 12px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 200; max-width: 86vw; text-align: center; }
+  .lg-sync-note.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .lg-sync-note:empty { display: none; }
+  .lg-dlg { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 24px; animation: lgGuideIn .15s ease; }
+  .lg-dlg.out { opacity: 0; transition: opacity .16s; }
+  .lg-dlg-card { width: 100%; max-width: 320px; background: var(--surface); color: var(--ink); border-radius: 22px; padding: 24px 20px 16px; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  .lg-dlg-msg { font-size: 15px; line-height: 1.55; font-weight: 600; text-align: center; white-space: pre-line; }
+  .lg-dlg-row { display: flex; gap: 8px; margin-top: 20px; }
+  .lg-dlg-row button { flex: 1; padding: 13px; border: none; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .lg-dlg-cancel { background: var(--tile); color: var(--ink); }
+  .lg-dlg-ok { background: var(--ink); color: var(--surface); }
+  .lg-dlg-ok.danger { background: #E5484D; color: #fff; }
 </style>
 </head>
 <body>
@@ -870,7 +883,10 @@
 
   function setSyncNote(text) {
     const el = document.getElementById("syncNote");
-    if (el) el.textContent = text;
+    if (!el) return;
+    el.textContent = text;
+    if (/^(저장 완료|클라우드에 저장됨) ·/.test(text)) return; /* 평소 저장은 조용히 */
+    el.classList.add("show"); clearTimeout(setSyncNote._t); setSyncNote._t = setTimeout(() => el.classList.remove("show"), 3200);
   }
 
   function showLoginScreen() {
@@ -1221,8 +1237,23 @@
     paint();
   })();
 
+  /* 앱 안 알림창 (브라우저 기본 창은 사이트 주소가 같이 보여서 대체) */
+  function lgConfirm(message, opt) {
+    opt = opt || {};
+    return new Promise(function (resolve) {
+      var ov = document.createElement("div"); ov.className = "lg-dlg"; ov.setAttribute("role", "alertdialog"); ov.setAttribute("aria-modal", "true");
+      ov.innerHTML = '<div class="lg-dlg-card"><div class="lg-dlg-msg"></div><div class="lg-dlg-row">' + (opt.single ? "" : '<button type="button" class="lg-dlg-cancel">' + (opt.cancel || "취소") + '</button>') + '<button type="button" class="lg-dlg-ok' + (opt.danger ? " danger" : "") + '">' + (opt.ok || "확인") + '</button></div></div>';
+      ov.querySelector(".lg-dlg-msg").textContent = message;
+      function done(v) { ov.classList.add("out"); setTimeout(function () { ov.remove(); }, 160); resolve(v); }
+      ov.querySelector(".lg-dlg-ok").addEventListener("click", function () { done(true); });
+      var c = ov.querySelector(".lg-dlg-cancel"); if (c) c.addEventListener("click", function () { done(false); });
+      ov.addEventListener("click", function (e) { if (e.target === ov && !opt.single) done(false); });
+      document.body.appendChild(ov);
+    });
+  }
+
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v78";
+  var LG_VERSION = "v79";
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     var FLAG = "household-ledger-guide-seen";
@@ -1307,7 +1338,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     try {
       await window.__lgDeleteAll();
       deleteModal.classList.add("hidden");
-      alert("저장된 정보가 모두 삭제되었어요.");
+      lgConfirm("저장된 정보가 모두 삭제되었어요.", { ok: "확인", single: true });
     } catch (e) {
       const code = e && e.code ? e.code : "오류";
       deleteError.textContent = "삭제에 실패했어요 (" + code + "). 네트워크를 확인하고 다시 시도해주세요.";
@@ -1426,7 +1457,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     try { data = sanitizeBackup(JSON.parse(await file.text())); } catch (e) {}
     if (!data) { backupNote("이 앱에서 만든 백업 파일이 아니에요. 파일을 다시 확인해주세요."); return; }
     const msg = "항목 " + data.items.length + "개, 내역 " + data.transactions.length + "건을 불러와요.\n현재 기록은 모두 이 내용으로 바뀝니다. 계속할까요?";
-    if (!window.confirm(msg)) return;
+    if (!(await lgConfirm(msg, { ok: "불러오기" }))) return;
     state = { items: data.items, transactions: data.transactions };
     openItem = null; editingTxId = null; editingItemName = null;
     await saveState();
@@ -1929,7 +1960,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
       el.onclick = (e) => { e.stopPropagation(); deleteTransaction(el.getAttribute("data-del")); };
     });
     document.querySelectorAll("[data-remove]").forEach((el) => {
-      el.onclick = () => { if (confirm(el.getAttribute("data-remove") + " 항목을 삭제할까요? 관련 거래 내역도 함께 삭제돼요.")) removeItem(el.getAttribute("data-remove")); };
+      el.onclick = () => { const nm = el.getAttribute("data-remove"); lgConfirm(nm + " 항목을 삭제할까요? 관련 거래 내역도 함께 삭제돼요.", { ok: "삭제", danger: true }).then((yes) => { if (yes) removeItem(nm); }); };
     });
     document.querySelectorAll("[data-itemprevmonth]").forEach((el) => {
       el.onclick = (e) => {
