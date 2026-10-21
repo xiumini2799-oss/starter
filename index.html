@@ -566,6 +566,43 @@
   :root[data-theme="dark"] .lg-g-tip { background: #2E323A; }
   .lg-g-tip::after { background: #191F28; }
   :root[data-theme="dark"] .lg-g-tip::after { background: #2E323A; }
+
+  /* v98 */
+  .lg-g-tip::after, .lg-g-tip2::after { display: none; }
+  .lg-g-tail { position: absolute; left: 16px; bottom: -6px; width: 12px; height: 7px; fill: #191F28; }
+  :root[data-theme="dark"] .lg-g-tail { fill: #2E323A; }
+  .lg-g-tail.up { left: auto; right: 34px; bottom: auto; top: -6px; }
+  .lg-exit-toast { z-index: 10001; }
+  .lg-guide { overflow-y: hidden; }
+  .lg-g-wrap { height: 100%; overflow-y: auto; scrollbar-width: none; }
+  .lg-g-wrap::-webkit-scrollbar { display: none; width: 0; }
+  @media (max-height: 780px) { .lg-g-wrap { padding-top: 36px; } .lg-g-stage { margin-top: 20px; } .lg-g-steps { margin-top: 20px; gap: 14px; } }
+  .lg-calc-btn { width: 38px; height: 38px; margin-right: 8px; border: none; border-radius: 50%; background: var(--tile); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .lg-calc-ov { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; animation: lgGuideIn .18s ease; }
+  .lg-calc-ov.out { opacity: 0; transition: opacity .18s; }
+  .lg-calc { width: 100%; max-width: 480px; background: var(--surface); color: var(--ink); border-radius: 24px 24px 0 0; padding: 20px 16px max(18px, env(safe-area-inset-bottom)); animation: lgCalcUp .22s ease; }
+  @keyframes lgCalcUp { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+  .lg-calc-sub { min-height: 18px; text-align: right; font-size: 13px; color: var(--ink-soft); padding: 0 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .lg-calc-main { text-align: right; font-size: 34px; font-weight: 800; letter-spacing: -0.03em; padding: 2px 6px 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .lg-calc-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .lg-ck { height: 54px; border: none; border-radius: 16px; background: var(--paper); color: var(--ink); font: inherit; font-size: 20px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .06s; }
+  .lg-ck.op, .lg-ck.fn { background: var(--tile); }
+  .lg-ck.eq { grid-row: span 2; height: auto; background: var(--ink); color: var(--surface); }
+  .lg-ck.down, .lg-calc-fill.down { transform: scale(.96); }
+  .lg-calc-fill { width: 100%; margin-top: 12px; height: 50px; border: none; border-radius: 16px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+  /* v99: 작은 팝업 계산기 */
+  .lg-calc-ov { background: transparent; align-items: flex-start; justify-content: flex-start; animation: none; }
+  .lg-calc { position: fixed; width: 232px; max-width: none; border-radius: 22px; padding: 14px; box-shadow: 0 12px 36px rgba(0,0,0,.2); animation: lgCalcPop .16s ease; transform-origin: calc(100% - var(--tx, 40px)) 0; }
+  @keyframes lgCalcPop { from { transform: scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+  .lg-calc::before { content: ""; position: absolute; right: var(--tx, 40px); top: -6px; width: 14px; height: 7px; background: var(--surface); clip-path: polygon(50% 0, 0 100%, 100% 100%); }
+  .lg-calc-sub { font-size: 11px; min-height: 14px; padding: 0 4px; }
+  .lg-calc-main { font-size: 26px; padding: 0 4px 10px; }
+  .lg-calc-keys { gap: 6px; }
+  .lg-ck { height: 38px; border-radius: 12px; font-size: 16px; }
+  .lg-ck.fn, .lg-ck.op { color: var(--ink-soft); }
+  .lg-ck.eq { height: auto; }
+  .lg-ck[data-k="0"] { grid-column: span 2; }
 </style>
 </head>
 <body>
@@ -727,6 +764,7 @@
     armExitGuard();
     armExitGuard();
     window.addEventListener("popstate", () => {
+      if (window.__lgBackHook && window.__lgBackHook()) { armExitGuard(); return; }
       if (exitPrimed) {
         exitPrimed = false;
         clearTimeout(exitPrimedTimer);
@@ -1300,8 +1338,8 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v97";
-  var GUIDE_REV = "96"; /* 안내 화면 내용을 바꿀 때만 이 숫자를 올려요. 올리면 모든 사용자에게 한 번 다시 보여요 */
+  var LG_VERSION = "v99";
+  var GUIDE_REV = "98"; /* 안내 화면 내용을 바꿀 때만 이 숫자를 올려요. 올리면 모든 사용자에게 한 번 다시 보여요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
     if (document.getElementById("lgGuide")) return;
@@ -1312,7 +1350,7 @@
       '<div class="lg-g-head"><h2>버튼을 눌러<br>바로 기록해요</h2><p>입력은 한 줄이면 충분해요</p></div>' +
       '<div class="lg-g-stage">' +
         '<div class="lg-g-input"><span class="lg-g-chip hidden">' + kcSvg("#6F7F9C") + '<b>용돈</b></span><span class="lg-g-ph">예: 식비 -9000 점심</span><button type="button" class="lg-g-add">추가</button></div>' +
-        '<div class="lg-g-item"><span class="lg-g-tip">눌러보세요</span><span class="lg-g-tip lg-g-tip2 hidden">추가를 눌러보세요</span><button type="button" class="lg-g-key" aria-label="항목 버튼 눌러보기">' + kcSvg("#6F7F9C") + '</button><span class="lg-g-name">용돈</span><span class="lg-g-bal">253,583원</span></div>' +
+        '<div class="lg-g-item"><span class="lg-g-tip">눌러보세요<svg class="lg-g-tail" viewBox="0 0 12 7" aria-hidden="true"><polygon points="0,0 12,0 6,7"/></svg></span><span class="lg-g-tip lg-g-tip2 hidden">추가를 눌러보세요<svg class="lg-g-tail up" viewBox="0 0 12 7" aria-hidden="true"><polygon points="6,0 0,7 12,7"/></svg></span><button type="button" class="lg-g-key" aria-label="항목 버튼 눌러보기">' + kcSvg("#6F7F9C") + '</button><span class="lg-g-name">용돈</span><span class="lg-g-bal">253,583원</span></div>' +
       '</div>' +
       '<ol class="lg-g-steps">' +
         '<li><i>1</i><div><b>항목 옆 버튼을 눌러요</b><span>입력창에 항목이 골라져요</span></div></li>' +
@@ -1359,6 +1397,78 @@
       ov.classList.add("out"); setTimeout(function () { ov.remove(); }, 250);
     });
   }
+
+  /* ===== 미니 계산기 ===== */
+  (function setupCalc() {
+    var hr = document.querySelector(".lg-header-right"), acc = document.getElementById("accountBtn");
+    if (!hr || document.getElementById("calcBtn")) return;
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.id = "calcBtn"; btn.className = "lg-calc-btn"; btn.setAttribute("aria-label", "계산기");
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8.5 7.5h7"/><path d="M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg>';
+    hr.insertBefore(btn, acc);
+    var ov = null, expr = "", justEq = false;
+    function fmt(s) { return s.replace(/\d+(\.\d*)?/g, function (m) { var p = m.split("."); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","); return p.join("."); }); }
+    function evalExpr(e) {
+      var tk = e.match(/\d+\.?\d*|\.\d+|[+\-×÷]/g); if (!tk) return null;
+      var out = [], i = 0, sign = 1;
+      function num() { var s = 1; while (tk[i] === "-" || tk[i] === "+") { if (tk[i] === "-") s = -s; i++; } if (i >= tk.length || /[×÷+\-]/.test(tk[i])) return null; return s * parseFloat(tk[i++]); }
+      var a = num(); if (a === null) return null;
+      var terms = [a], ops = [];
+      while (i < tk.length) {
+        var op = tk[i++]; var b = num(); if (b === null) return null;
+        if (op === "×") terms[terms.length - 1] *= b;
+        else if (op === "÷") { if (b === 0) return NaN; terms[terms.length - 1] /= b; }
+        else { ops.push(op); terms.push(b); }
+      }
+      var r = terms[0]; for (var k = 0; k < ops.length; k++) r = ops[k] === "+" ? r + terms[k + 1] : r - terms[k + 1];
+      return Math.round(r * 1e6) / 1e6;
+    }
+    function result() { var r = evalExpr(expr); return r; }
+    function paint() {
+      if (!ov) return;
+      var r = result(), main = ov.querySelector(".lg-calc-main"), sub = ov.querySelector(".lg-calc-sub");
+      var hasOp = /[+\-×÷]/.test(expr.replace(/^-/, ""));
+      if (r !== null && isNaN(r)) { main.textContent = "계산할 수 없어요"; sub.textContent = fmt(expr); return; }
+      main.textContent = expr ? (hasOp && r !== null ? fmt(String(r)) : fmt(expr)) : "0";
+      sub.textContent = hasOp ? fmt(expr) : "";
+    }
+    function press(k) {
+      if (k === "C") { expr = ""; justEq = false; }
+      else if (k === "⌫") { expr = expr.slice(0, -1); justEq = false; }
+      else if (k === "=") { var r = result(); if (r !== null && !isNaN(r)) { expr = String(r); justEq = true; } }
+      else if (/[+\-×÷]/.test(k)) { justEq = false; if (!expr && k !== "-") return; if (/[+\-×÷]$/.test(expr)) expr = expr.slice(0, -1); expr += k; }
+      else {
+        if (justEq) { expr = ""; justEq = false; }
+        var last = (expr.match(/[\d.]+$/) || [""])[0];
+        if (k === ".") { if (last.indexOf(".") >= 0) return; if (!last) expr += "0"; }
+        if ((k === "0" || k === "00") && last === "0") return;
+        if (last === "0" && k !== "." && k !== "0" && k !== "00") expr = expr.slice(0, -1);
+        if (expr.length > 40) return; expr += k;
+      }
+      paint();
+    }
+    function close() { if (!ov) return; var o = ov; ov = null; o.classList.add("out"); setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 180); }
+    function open() {
+      if (ov) return;
+      expr = ""; justEq = false;
+      ov = document.createElement("div"); ov.className = "lg-calc-ov";
+      var keys = [["C","fn"],["⌫","fn"],["÷","op"],["×","op"],["7"],["8"],["9"],["-","op"],["4"],["5"],["6"],["+","op"],["1"],["2"],["3"],["=","eq"],["0"],["."]];
+      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
+      keys.forEach(function (k) { h += '<button type="button" class="lg-ck ' + (k[1] || "") + '" data-k="' + k[0] + '">' + (k[0] === "-" ? "−" : k[0]) + '</button>'; });
+      h += '</div></div>';
+      ov.innerHTML = h; document.body.appendChild(ov); paint();
+      var pn = ov.querySelector(".lg-calc"), r = btn.getBoundingClientRect(), W = window.innerWidth;
+      pn.style.top = Math.round(r.bottom + 10) + "px";
+      pn.style.right = "14px";
+      pn.style.setProperty("--tx", Math.max(14, Math.round(W - (r.left + r.width / 2) - 14 - 7)) + "px");
+      ov.addEventListener("pointerdown", function (e) { if (e.target === ov) { close(); return; } var b = e.target.closest(".lg-ck"); if (b) b.classList.add("down"); });
+      var rel = function () { ov && ov.querySelectorAll(".down").forEach(function (x) { x.classList.remove("down"); }); };
+      ov.addEventListener("pointerup", rel); ov.addEventListener("pointercancel", rel);
+      ov.addEventListener("click", function (e) { var b = e.target.closest(".lg-ck"); if (b) press(b.getAttribute("data-k")); });
+    }
+    btn.addEventListener("click", function () { var qi = document.getElementById("quickInput"); if (qi) qi.blur(); open(); });
+    window.__lgBackHook = function () { if (ov) { close(); return true; } return false; };
+  })();
   (function setupGuide() {
     try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     try { /* 지난 버전의 표시는 지워서 저장 공간에 쌓이지 않게 */
