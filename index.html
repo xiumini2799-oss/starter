@@ -603,6 +603,20 @@
   .lg-ck.fn, .lg-ck.op { color: var(--ink-soft); }
   .lg-ck.eq { height: auto; }
   .lg-ck[data-k="0"] { grid-column: span 2; }
+
+  /* v100: 말풍선 몸통+꼬리를 한 덩어리로 그려서 색이 항상 같게 */
+  .lg-g-tail { display: none; }
+  .lg-g-tip { box-sizing: border-box; padding: 0; box-shadow: none; border-radius: 0; width: 92px; height: 36px; line-height: 29px; text-align: center; white-space: nowrap; top: 8px; clip-path: path('M12,0 H80 A12,12 0 0 1 92,12 V17 A12,12 0 0 1 80,29 H28 L22,36 L16,29 H12 A12,12 0 0 1 0,17 V12 A12,12 0 0 1 12,0 Z'); }
+  .lg-g-tip2 { width: 132px; padding-top: 7px; top: 1px; clip-path: path('M12,7 H86 L92,0 L98,7 H120 A12,12 0 0 1 132,19 V24 A12,12 0 0 1 120,36 H12 A12,12 0 0 1 0,24 V19 A12,12 0 0 1 12,7 Z'); }
+
+  /* v102: 내역 수정 폼 — 항목 선택 추가, 좁은 화면에서 잘리지 않게 */
+  .lg-tx-edit-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .lg-tx-edit-fields > * { min-width: 0; width: 100%; box-sizing: border-box; }
+  .lg-tx-edit-fields .lg-tx-edit-item { grid-column: 1 / -1; }
+  .lg-tx-edit-fields input[placeholder="내용"] { grid-column: 1 / -1; }
+  .lg-tx-edit-fields input, .lg-tx-edit-fields select { height: 42px; font-size: 14px; border-radius: 12px; border: none; background: var(--tile); color: var(--ink); font-family: inherit; padding: 0 12px; }
+  .lg-tx-edit-fields input[type="date"] { appearance: none; -webkit-appearance: none; }
+  .lg-tx-edit-btns button { height: 40px; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -645,7 +659,7 @@
         <button class="lg-login-inline-btn hidden" id="loginBtnInline">구글로 로그인</button>
         <div class="lg-theme-label">화면 색</div>
         <div class="lg-theme-row"><button class="lg-theme-chip" data-theme-pref="light">화이트</button><button class="lg-theme-chip" data-theme-pref="dark">블랙</button></div>
-        <div class="lg-theme-label">입력 소리 · 진동</div>
+        <div class="lg-theme-label">입력 소리</div>
         <div class="lg-theme-row"><button class="lg-theme-chip" data-sound-pref="on">켜짐</button><button class="lg-theme-chip" data-sound-pref="off">꺼짐</button></div>
         <button class="lg-backup-btn" id="backupOpenBtn">백업 · 내보내기</button>
         <button class="lg-delete-data-btn hidden" id="deleteDataBtn">내 정보 모두 삭제</button>
@@ -1124,7 +1138,7 @@
     return {
       get enabled() { return enabled; }, get isDown() { return isDown; },
       setEnabled: function (v) { enabled = !!v; try { localStorage.setItem("household-ledger-sound", enabled ? "on" : "off"); } catch (e) {} },
-      warm: function () { ensure(); }, down: function () { var c = ensure(); if (!c) return; isDown = true; prof().down(c.currentTime + 0.0005); try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {} },
+      warm: function () { ensure(); }, down: function () { var c = ensure(); if (!c) return; isDown = true; prof().down(c.currentTime + 0.0005); },
       up: function () { isDown = false; var c = ensure(); if (!c) return; prof().up(c.currentTime + 0.001); }
       
     };
@@ -1338,7 +1352,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v99";
+  var LG_VERSION = "v102";
   var GUIDE_REV = "98"; /* 안내 화면 내용을 바꿀 때만 이 숫자를 올려요. 올리면 모든 사용자에게 한 번 다시 보여요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
@@ -1350,7 +1364,7 @@
       '<div class="lg-g-head"><h2>버튼을 눌러<br>바로 기록해요</h2><p>입력은 한 줄이면 충분해요</p></div>' +
       '<div class="lg-g-stage">' +
         '<div class="lg-g-input"><span class="lg-g-chip hidden">' + kcSvg("#6F7F9C") + '<b>용돈</b></span><span class="lg-g-ph">예: 식비 -9000 점심</span><button type="button" class="lg-g-add">추가</button></div>' +
-        '<div class="lg-g-item"><span class="lg-g-tip">눌러보세요<svg class="lg-g-tail" viewBox="0 0 12 7" aria-hidden="true"><polygon points="0,0 12,0 6,7"/></svg></span><span class="lg-g-tip lg-g-tip2 hidden">추가를 눌러보세요<svg class="lg-g-tail up" viewBox="0 0 12 7" aria-hidden="true"><polygon points="6,0 0,7 12,7"/></svg></span><button type="button" class="lg-g-key" aria-label="항목 버튼 눌러보기">' + kcSvg("#6F7F9C") + '</button><span class="lg-g-name">용돈</span><span class="lg-g-bal">253,583원</span></div>' +
+        '<div class="lg-g-item"><span class="lg-g-tip">눌러보세요</span><span class="lg-g-tip lg-g-tip2 hidden">추가를 눌러보세요</span><button type="button" class="lg-g-key" aria-label="항목 버튼 눌러보기">' + kcSvg("#6F7F9C") + '</button><span class="lg-g-name">용돈</span><span class="lg-g-bal">253,583원</span></div>' +
       '</div>' +
       '<ol class="lg-g-steps">' +
         '<li><i>1</i><div><b>항목 옆 버튼을 눌러요</b><span>입력창에 항목이 골라져요</span></div></li>' +
@@ -1461,8 +1475,8 @@
       pn.style.top = Math.round(r.bottom + 10) + "px";
       pn.style.right = "14px";
       pn.style.setProperty("--tx", Math.max(14, Math.round(W - (r.left + r.width / 2) - 14 - 7)) + "px");
-      ov.addEventListener("pointerdown", function (e) { if (e.target === ov) { close(); return; } var b = e.target.closest(".lg-ck"); if (b) b.classList.add("down"); });
-      var rel = function () { ov && ov.querySelectorAll(".down").forEach(function (x) { x.classList.remove("down"); }); };
+      ov.addEventListener("pointerdown", function (e) { if (e.target === ov) { close(); return; } var b = e.target.closest(".lg-ck"); if (b) { b.classList.add("down"); KeySound.down(); } });
+      var rel = function () { var had = ov && ov.querySelector(".down"); ov && ov.querySelectorAll(".down").forEach(function (x) { x.classList.remove("down"); }); if (had) KeySound.up(); };
       ov.addEventListener("pointerup", rel); ov.addEventListener("pointercancel", rel);
       ov.addEventListener("click", function (e) { var b = e.target.closest(".lg-ck"); if (b) press(b.getAttribute("data-k")); });
     }
@@ -1779,9 +1793,10 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     render();
   }
 
-  function editTransaction(id, newDate, newAmount, newMemo, newType) {
+  function editTransaction(id, newDate, newAmount, newMemo, newType, newItem) {
     const tx = state.transactions.find((t) => t.id === id);
     if (!tx) return;
+    if (newItem && newItem !== tx.item && getItem(newItem)) tx.item = newItem;
     tx.date = newDate || tx.date;
     tx.amount = newAmount;
     tx.memo = (newMemo || "").trim().slice(0, 20);
@@ -1996,6 +2011,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
                 if (editingTxId === t.id) {
                   return '<div class="lg-tx-item lg-tx-edit-row">' +
                     '<div class="lg-tx-edit-fields">' +
+                      '<select class="lg-tx-edit-input lg-tx-edit-item" data-tx="' + t.id + '" id="edit-item-' + t.id + '">' + state.items.map((x) => '<option value="' + esc(x.name) + '"' + (x.name === t.item ? ' selected' : '') + '>' + esc(x.name) + '</option>').join("") + '</select>' +
                       '<input type="date" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-date-' + t.id + '" value="' + t.date + '" />' +
                       '<input type="number" inputmode="numeric" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-amt-' + t.id + '" value="' + (t.type === "out" ? "-" : "") + Math.abs(t.amount) + '" />' +
                       '<input type="text" maxlength="20" placeholder="내용" class="lg-tx-edit-input" data-tx="' + t.id + '" id="edit-memo-' + t.id + '" value="' + esc(t.memo) + '" />' +
@@ -2141,7 +2157,8 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
         const amt = Number(rawAmt);
         if (Number.isNaN(amt)) return;
         const newType = rawAmt.startsWith("-") ? "out" : "in";
-        editTransaction(id, date, Math.abs(amt), memo, newType);
+        const itemSel = document.getElementById("edit-item-" + id);
+        editTransaction(id, date, Math.abs(amt), memo, newType, itemSel ? itemSel.value : null);
       };
     });
     document.querySelectorAll(".lg-tx-edit-input").forEach((el) => {
