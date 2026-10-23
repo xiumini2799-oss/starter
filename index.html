@@ -19,7 +19,7 @@
     var t=window.__lgEffective(pref);
     document.documentElement.setAttribute("data-theme",t);
     var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",t==="dark"?"#0B0B0D":"#F4F5F7");
-    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content","light dark");
+    var c=document.querySelector('meta[name="color-scheme"]'); if(c) c.setAttribute("content",t==="dark"?"dark":"only light");
   };
   window.__lgApplyTheme(window.__lgThemePref());
 })();
@@ -268,7 +268,7 @@
     --overlay:rgba(0,0,0,0.42); --shadow:rgba(0,0,0,0.12);
     --danger:#F04452; --danger-bg:#F04452; --on-danger:#fff;
     --tile:#F4F5F7; --track:#E8EAEE; --soft-line:#F2F3F5;
-    color-scheme: light dark; interpolate-size: allow-keywords;
+    color-scheme: only light; interpolate-size: allow-keywords;
   }
   :root[data-theme="dark"] {
     --paper:#0B0B0D; --paper-line:#26272C; --ink:#F2F4F6; --ink-soft:#8B95A1;
@@ -1352,8 +1352,8 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v102";
-  var GUIDE_REV = "98"; /* 안내 화면 내용을 바꿀 때만 이 숫자를 올려요. 올리면 모든 사용자에게 한 번 다시 보여요 */
+  var LG_VERSION = "v103";
+  var GUIDE_REV = LG_VERSION; /* 앱이 업데이트될 때마다 안내 화면을 한 번 보여줘요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
     if (document.getElementById("lgGuide")) return;
