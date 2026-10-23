@@ -780,31 +780,28 @@
 
 <script type="module">
   // ===================== 뒤로가기 두 번 눌러 종료 =====================
-  function armExitGuard() {
-    history.pushState({ lgExitGuard: true }, "", location.href);
-  }
-
+  let guardArmed = false;
   let exitPrimed = false;
-  let exitPrimedTimer = null;
+  let exitTimer = null;
+  function armExitGuard() {
+    if (guardArmed) return;
+    try { history.pushState({ lgExitGuard: true }, "", location.href); guardArmed = true; } catch (e) {}
+  }
+  function hideExitToast() { const t = document.getElementById("exitToast"); if (t) t.classList.remove("show"); }
 
   function setupExitGuard() {
-    armExitGuard();
-    armExitGuard();
+    /* 브라우저는 '터치 없이' 쌓은 기록을 뒤로가기에서 건너뛰어요 → 첫 터치 때와 이후 터치 때마다 기록을 채워요 */
+    const gesture = () => { armExitGuard(); };
+    window.addEventListener("pointerup", gesture, true);
+    window.addEventListener("keydown", gesture, true);
     window.addEventListener("popstate", () => {
+      guardArmed = false;
       if (window.__lgBackHook && window.__lgBackHook()) { armExitGuard(); return; }
-      if (exitPrimed) {
-        exitPrimed = false;
-        clearTimeout(exitPrimedTimer);
-        document.getElementById("exitToast").classList.remove("show");
-        return;
-      }
+      if (exitPrimed) return; /* 이미 안내 중 — 기록이 비어 있어서 지금 누르면 앱이 닫혀요 */
       exitPrimed = true;
-      armExitGuard();
-      document.getElementById("exitToast").classList.add("show");
-      exitPrimedTimer = setTimeout(() => {
-        exitPrimed = false;
-        document.getElementById("exitToast").classList.remove("show");
-      }, 2000);
+      const t = document.getElementById("exitToast"); if (t) t.classList.add("show");
+      clearTimeout(exitTimer);
+      exitTimer = setTimeout(() => { exitPrimed = false; hideExitToast(); armExitGuard(); }, 2000);
     });
   }
   if (document.readyState === "complete") {
@@ -1365,7 +1362,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v105";
+  var LG_VERSION = "v106";
   var GUIDE_REV = LG_VERSION; /* 앱이 업데이트될 때마다 안내 화면을 한 번 보여줘요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
