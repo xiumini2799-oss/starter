@@ -625,6 +625,11 @@
   :root[data-theme="dark"] .lg-account-panel, :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-dlg-card, :root[data-theme="dark"] .lg-exit-toast, :root[data-theme="dark"] .lg-sync-note { box-shadow: none; border: 1px solid var(--paper-line); }
   :root[data-theme="dark"] .lg-item-card, :root[data-theme="dark"] .lg-total-card, :root[data-theme="dark"] .lg-quick-row, :root[data-theme="dark"] .lg-guide .lg-g-stage { box-shadow: none; filter: none; }
   :root[data-theme="dark"] .lg-g-tip, :root[data-theme="dark"] .lg-g-tip2, :root[data-theme="light"] .lg-g-tip { background: none; }
+  /* v105: 윤곽선 제거, 계산기 꼬리 제거 */
+  :root[data-theme="dark"] .lg-account-panel, :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-dlg-card, :root[data-theme="dark"] .lg-exit-toast, :root[data-theme="dark"] .lg-sync-note { border: none; }
+  .lg-calc::before { display: none; }
+  :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-account-panel { background: #25262C; }
+  :root[data-theme="dark"] .lg-ck.op, :root[data-theme="dark"] .lg-ck.fn { background: #33343C; }
 </style>
 </head>
 <body>
@@ -1360,7 +1365,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v104";
+  var LG_VERSION = "v105";
   var GUIDE_REV = LG_VERSION; /* 앱이 업데이트될 때마다 안내 화면을 한 번 보여줘요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
