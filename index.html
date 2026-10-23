@@ -617,6 +617,14 @@
   .lg-tx-edit-fields input, .lg-tx-edit-fields select { height: 42px; font-size: 14px; border-radius: 12px; border: none; background: var(--tile); color: var(--ink); font-family: inherit; padding: 0 12px; }
   .lg-tx-edit-fields input[type="date"] { appearance: none; -webkit-appearance: none; }
   .lg-tx-edit-btns button { height: 40px; font-size: 14px; }
+
+  /* v104: 말풍선은 캔버스 그림, 다크 테마 그림자 제거(폰 자동 다크 변환 때 뿌옇게 번지는 것 방지) */
+  .lg-g-tip, .lg-g-tip2 { clip-path: none; background: none; color: transparent; font-size: 0; line-height: 0; height: auto; width: auto; padding: 0; }
+  .lg-g-tip canvas { display: block; }
+  .lg-g-tip2 { top: 1px; }
+  :root[data-theme="dark"] .lg-account-panel, :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-dlg-card, :root[data-theme="dark"] .lg-exit-toast, :root[data-theme="dark"] .lg-sync-note { box-shadow: none; border: 1px solid var(--paper-line); }
+  :root[data-theme="dark"] .lg-item-card, :root[data-theme="dark"] .lg-total-card, :root[data-theme="dark"] .lg-quick-row, :root[data-theme="dark"] .lg-guide .lg-g-stage { box-shadow: none; filter: none; }
+  :root[data-theme="dark"] .lg-g-tip, :root[data-theme="dark"] .lg-g-tip2, :root[data-theme="light"] .lg-g-tip { background: none; }
 </style>
 </head>
 <body>
@@ -1352,7 +1360,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v103";
+  var LG_VERSION = "v104";
   var GUIDE_REV = LG_VERSION; /* 앱이 업데이트될 때마다 안내 화면을 한 번 보여줘요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
@@ -1374,6 +1382,28 @@
       '<div class="lg-g-foot">항목은 \'항목 관리\'에서 추가·삭제할 수 있어요</div>' +
       '<button type="button" class="lg-g-go">시작하기</button></div>';
     document.body.appendChild(ov);
+    /* 말풍선은 그림(캔버스)으로 그려요 — 폰의 자동 다크 변환이 색을 바꾸지 못하게. 다크: 흰 말풍선, 화이트: 검은 말풍선 */
+    function drawTips() {
+      var cs = getComputedStyle(document.documentElement), ink = cs.getPropertyValue("--ink").trim() || "#191F28", sf = cs.getPropertyValue("--surface").trim() || "#fff";
+      var ff = getComputedStyle(document.body).fontFamily, dpr = Math.max(2, window.devicePixelRatio || 2);
+      ov.querySelectorAll(".lg-g-tip").forEach(function (el) {
+        var up = el.classList.contains("lg-g-tip2"), txt = el.getAttribute("data-t") || el.textContent;
+        el.setAttribute("data-t", txt);
+        var w = up ? 132 : 92, h = 36, by = up ? 7 : 0, bh = 29, r = 12, tx = up ? w - 40 : 22;
+        var cv = el.querySelector("canvas");
+        if (!cv) { el.textContent = ""; cv = document.createElement("canvas"); el.appendChild(cv); }
+        cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + "px"; cv.style.height = h + "px";
+        var c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+        c.fillStyle = ink; c.beginPath();
+        c.moveTo(r, by); 
+        if (up) { c.lineTo(tx - 6, by); c.lineTo(tx, 0); c.lineTo(tx + 6, by); }
+        c.lineTo(w - r, by); c.arcTo(w, by, w, by + r, r); c.lineTo(w, by + bh - r); c.arcTo(w, by + bh, w - r, by + bh, r);
+        if (!up) { c.lineTo(28, by + bh); c.lineTo(22, h); c.lineTo(16, by + bh); }
+        c.lineTo(r, by + bh); c.arcTo(0, by + bh, 0, by + bh - r, r); c.lineTo(0, by + r); c.arcTo(0, by, r, by, r); c.closePath(); c.fill();
+        c.fillStyle = sf; c.font = "700 12px " + ff; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(txt, w / 2, by + bh / 2 + 0.5);
+      });
+    }
+    drawTips(); try { if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawTips); } catch (e) {}
     var key = ov.querySelector(".lg-g-key"), chip = ov.querySelector(".lg-g-chip"), ph = ov.querySelector(".lg-g-ph");
     var addBtn = ov.querySelector(".lg-g-add"), balEl = ov.querySelector(".lg-g-bal"), tip2 = ov.querySelector(".lg-g-tip2"), itemRow = ov.querySelector(".lg-g-item");
     var sel = false, bal = 253583, busy = false, added = false;
