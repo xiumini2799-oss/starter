@@ -635,6 +635,10 @@
   .lg-total-label { display: flex; align-items: center; gap: 4px; }
   .lg-hide-btn { width: 30px; height: 30px; margin: -6px 0 -6px 2px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--muted, #8B95A1); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .lg-hide-btn:active { background: rgba(127,127,127,.18); }
+
+  /* 잔액 숨김: 항목별 잔액도 가림 */
+  body.lg-hide-amt .lg-item-balance { font-size: 0; letter-spacing: 0; }
+  body.lg-hide-amt .lg-item-balance::after { content: "•••••"; font-size: 17px; font-weight: 700; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -1367,7 +1371,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v109";
+  var LG_VERSION = "v110";
   var GUIDE_REV = LG_VERSION; /* 앱이 업데이트될 때마다 안내 화면을 한 번 보여줘요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
@@ -1450,7 +1454,7 @@
   }
 
   /* ===== 미니 계산기 ===== */
-  /* 전체 잔액 숨기기 */
+  /* 전체 잔액·항목별 잔액 한꺼번에 숨기기 */
   (function setupHideTotal() {
     var KEY = "household-ledger-hide-total";
     var hidden = false;
@@ -1462,10 +1466,11 @@
       var el = document.getElementById("totalValue"); if (!el) return;
       if (el.dataset.real === undefined) el.dataset.real = el.textContent;
       el.textContent = hidden ? "•••••" : el.dataset.real;
+      document.body.classList.toggle("lg-hide-amt", hidden);
       var b = btn();
-      if (b) { b.innerHTML = hidden ? EYE_OFF : EYE; b.setAttribute("aria-label", hidden ? "전체 잔액 보이기" : "전체 잔액 숨기기"); b.setAttribute("aria-pressed", hidden ? "true" : "false"); }
+      if (b) { b.innerHTML = hidden ? EYE_OFF : EYE; b.setAttribute("aria-label", hidden ? "잔액 보이기" : "잔액 숨기기"); b.setAttribute("aria-pressed", hidden ? "true" : "false"); }
     }
-    window.__lgHideTotal = function (el) { el.dataset.real = el.textContent; if (hidden) el.textContent = "•••••"; };
+    window.__lgHideTotal = function (el) { el.dataset.real = el.textContent; if (hidden) el.textContent = "•••••"; document.body.classList.toggle("lg-hide-amt", hidden); };
     function mount() {
       var label = document.querySelector(".lg-total-label");
       if (!label || btn()) return;
