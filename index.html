@@ -577,7 +577,8 @@
   .lg-g-wrap { height: 100%; overflow-y: auto; scrollbar-width: none; }
   .lg-g-wrap::-webkit-scrollbar { display: none; width: 0; }
   @media (max-height: 780px) { .lg-g-wrap { padding-top: 36px; } .lg-g-stage { margin-top: 20px; } .lg-g-steps { margin-top: 20px; gap: 14px; } }
-  .lg-calc-btn { width: 38px; height: 38px; margin-right: 8px; border: none; border-radius: 50%; background: var(--tile); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .lg-calc-btn { width: auto; height: 34px; padding: 0 14px; margin-right: 8px; border: none; border-radius: 17px; background: #fff; color: #191F28; box-shadow: inset 0 0 0 1.5px #191F28; font: inherit; font-size: 14px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  :root[data-theme="dark"] .lg-calc-btn { background: #0B0B0D; color: #F2F4F6; box-shadow: inset 0 0 0 1.5px #F2F4F6; }
   .lg-calc-ov { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; animation: lgGuideIn .18s ease; }
   .lg-calc-ov.out { opacity: 0; transition: opacity .18s; }
   .lg-calc { width: 100%; max-width: 480px; background: var(--surface); color: var(--ink); border-radius: 24px 24px 0 0; padding: 20px 16px max(18px, env(safe-area-inset-bottom)); animation: lgCalcUp .22s ease; }
@@ -628,6 +629,16 @@
   /* v105: 윤곽선 제거, 계산기 꼬리 제거 */
   :root[data-theme="dark"] .lg-account-panel, :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-dlg-card, :root[data-theme="dark"] .lg-exit-toast, :root[data-theme="dark"] .lg-sync-note { border: none; }
   .lg-calc::before { display: none; }
+  /* v111: 계산기를 끌어서 옮길 수 있고, 뒤 화면도 눌러볼 수 있어요 */
+  .lg-calc-ov { pointer-events: none; }
+  .lg-calc { pointer-events: auto; touch-action: manipulation; -webkit-user-select: none; user-select: none; left: 0; top: 0; right: auto; }
+  .lg-calc-bar { display: flex; align-items: center; justify-content: space-between; height: 26px; margin: -6px -4px 4px; touch-action: none; cursor: grab; }
+  .lg-calc-bar.drag { cursor: grabbing; }
+  .lg-calc-grip { flex: 1; display: flex; justify-content: center; }
+  .lg-calc-grip i { display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--ink-soft); opacity: .45; }
+  .lg-calc-x { width: 26px; height: 26px; border: none; border-radius: 50%; background: transparent; color: var(--ink-soft); font: inherit; font-size: 18px; line-height: 1; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .lg-calc-sp { width: 26px; }
+  .lg-ck { touch-action: manipulation; }
   :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-account-panel { background: #25262C; }
   :root[data-theme="dark"] .lg-ck.op, :root[data-theme="dark"] .lg-ck.fn { background: #33343C; }
 
@@ -1371,7 +1382,7 @@
   }
 
   /* 첫 실행 안내 + 버전 표시 */
-  var LG_VERSION = "v110";
+  var LG_VERSION = "v111";
   var GUIDE_REV = LG_VERSION; /* 앱이 업데이트될 때마다 안내 화면을 한 번 보여줘요 */
   var FLAG_GUIDE = "household-ledger-guide-seen-" + GUIDE_REV;
   function showGuide() {
@@ -1488,7 +1499,7 @@
     if (!hr || document.getElementById("calcBtn")) return;
     var btn = document.createElement("button");
     btn.type = "button"; btn.id = "calcBtn"; btn.className = "lg-calc-btn"; btn.setAttribute("aria-label", "계산기");
-    btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8.5 7.5h7"/><path d="M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg>';
+    btn.textContent = "계산기";
     hr.insertBefore(btn, acc);
     var ov = null, expr = "", justEq = false;
     function fmt(s) { return s.replace(/\d+(\.\d*)?/g, function (m) { var p = m.split("."); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","); return p.join("."); }); }
@@ -1531,26 +1542,62 @@
       }
       paint();
     }
-    function close() { if (!ov) return; var o = ov; ov = null; o.classList.add("out"); setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 180); }
+    function close() { if (!ov) return; var o = ov; ov = null; if (o._onResize) window.removeEventListener("resize", o._onResize); o.classList.add("out"); setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 180); }
     function open() {
       if (ov) return;
       expr = ""; justEq = false;
       ov = document.createElement("div"); ov.className = "lg-calc-ov";
       var keys = [["C","fn"],["⌫","fn"],["÷","op"],["×","op"],["7"],["8"],["9"],["-","op"],["4"],["5"],["6"],["+","op"],["1"],["2"],["3"],["=","eq"],["0"],["."]];
-      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
+      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-bar"><span class="lg-calc-sp"></span><span class="lg-calc-grip"><i></i></span><button type="button" class="lg-calc-x" aria-label="계산기 닫기">✕</button></div><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
       keys.forEach(function (k) { h += '<button type="button" class="lg-ck ' + (k[1] || "") + '" data-k="' + k[0] + '">' + (k[0] === "-" ? "−" : k[0]) + '</button>'; });
       h += '</div></div>';
       ov.innerHTML = h; document.body.appendChild(ov); paint();
-      var pn = ov.querySelector(".lg-calc"), r = btn.getBoundingClientRect(), W = window.innerWidth;
-      pn.style.top = Math.round(r.bottom + 10) + "px";
-      pn.style.right = "14px";
-      pn.style.setProperty("--tx", Math.max(14, Math.round(W - (r.left + r.width / 2) - 14 - 7)) + "px");
-      ov.addEventListener("pointerdown", function (e) { if (e.target === ov) { close(); return; } var b = e.target.closest(".lg-ck"); if (b) { b.classList.add("down"); KeySound.down(); } });
+      var pn = ov.querySelector(".lg-calc"), bar = ov.querySelector(".lg-calc-bar"), r = btn.getBoundingClientRect();
+      var POS = "household-ledger-calc-pos", pos = null;
+      try { pos = JSON.parse(localStorage.getItem(POS) || "null"); } catch (e) {}
+      function clamp(x, y) {
+        var w = pn.offsetWidth, h = pn.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+        return { x: Math.min(Math.max(6, x), Math.max(6, W - w - 6)), y: Math.min(Math.max(6, y), Math.max(6, H - h - 6)) };
+      }
+      function place(x, y) { var c = clamp(x, y); pn.style.left = c.x + "px"; pn.style.top = c.y + "px"; return c; }
+      if (pos && typeof pos.x === "number" && typeof pos.y === "number") place(pos.x, pos.y);
+      else place(window.innerWidth - pn.offsetWidth - 14, Math.round(r.bottom + 10));
+      var drag = null;
+      bar.addEventListener("pointerdown", function (e) {
+        if (e.target.closest(".lg-calc-x")) return;
+        drag = { id: e.pointerId, dx: e.clientX - pn.offsetLeft, dy: e.clientY - pn.offsetTop };
+        bar.classList.add("drag"); try { bar.setPointerCapture(e.pointerId); } catch (x) {}
+        e.preventDefault();
+      });
+      bar.addEventListener("pointermove", function (e) { if (!drag || e.pointerId !== drag.id) return; place(e.clientX - drag.dx, e.clientY - drag.dy); });
+      var endDrag = function (e) {
+        if (!drag || (e && e.pointerId !== drag.id)) return; drag = null; bar.classList.remove("drag");
+        try { localStorage.setItem(POS, JSON.stringify({ x: pn.offsetLeft, y: pn.offsetTop })); } catch (x) {}
+      };
+      bar.addEventListener("pointerup", endDrag); bar.addEventListener("pointercancel", endDrag);
+      ov._onResize = function () { place(pn.offsetLeft, pn.offsetTop); };
+      window.addEventListener("resize", ov._onResize);
+      var xb = ov.querySelector(".lg-calc-x"), xd = false;
+      xb.addEventListener("pointerdown", function () { xd = true; });
+      xb.addEventListener("pointerup", function () { if (xd) { xd = false; close(); } });
+      xb.addEventListener("pointercancel", function () { xd = false; });
+      xb.addEventListener("click", function (e) { if (e.detail === 0) close(); }); /* 키보드 */
+      /* 눌린 즉시 입력되게 해서, 빠르게 눌러도 빠지지 않아요 */
+      var handled = false;
+      pn.addEventListener("pointerdown", function (e) {
+        var b = e.target.closest(".lg-ck"); if (!b) return;
+        b.classList.add("down"); KeySound.down(); press(b.getAttribute("data-k")); handled = true;
+      });
       var rel = function () { var had = ov && ov.querySelector(".down"); ov && ov.querySelectorAll(".down").forEach(function (x) { x.classList.remove("down"); }); if (had) KeySound.up(); };
-      ov.addEventListener("pointerup", rel); ov.addEventListener("pointercancel", rel);
-      ov.addEventListener("click", function (e) { var b = e.target.closest(".lg-ck"); if (b) press(b.getAttribute("data-k")); });
+      pn.addEventListener("mousedown", function (e) { if (e.target.closest(".lg-ck")) e.preventDefault(); }); /* 입력창의 키보드가 닫히지 않게 */
+      pn.addEventListener("pointerup", rel); pn.addEventListener("pointercancel", rel); pn.addEventListener("pointerleave", rel);
+      pn.addEventListener("click", function (e) { var b = e.target.closest(".lg-ck"); if (!b) return; if (handled) { handled = false; return; } press(b.getAttribute("data-k")); }); /* 키보드로 누른 경우 */
     }
-    btn.addEventListener("click", function () { var qi = document.getElementById("quickInput"); if (qi) qi.blur(); open(); });
+    var bd = false;
+    btn.addEventListener("pointerdown", function () { bd = true; });
+    btn.addEventListener("pointerup", function () { if (bd) { bd = false; if (ov) close(); else open(); } });
+    btn.addEventListener("pointercancel", function () { bd = false; });
+    btn.addEventListener("click", function (e) { if (e.detail === 0) { if (ov) close(); else open(); } }); /* 키보드 */
     window.__lgBackHook = function () { if (ov) { close(); return true; } return false; };
   })();
   (function setupGuide() {
