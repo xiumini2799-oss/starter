@@ -1,10 +1,11 @@
-const CACHE_NAME = "ledger-cache-v111";
+const CACHE_NAME = "ledger-cache-v112";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-maskable-512.png",
   "./char.png",
   "./char-head.png",
 ];
