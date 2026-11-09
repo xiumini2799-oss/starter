@@ -577,7 +577,7 @@
   .lg-g-wrap { height: 100%; overflow-y: auto; scrollbar-width: none; }
   .lg-g-wrap::-webkit-scrollbar { display: none; width: 0; }
   @media (max-height: 780px) { .lg-g-wrap { padding-top: 36px; } .lg-g-stage { margin-top: 20px; } .lg-g-steps { margin-top: 20px; gap: 14px; } }
-  .lg-calc-btn { width: auto; height: 34px; padding: 0 14px; margin-right: 8px; border: none; border-radius: 17px; background: #fff; color: #191F28; box-shadow: inset 0 0 0 1.5px #191F28; font: inherit; font-size: 14px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .lg-calc-btn { width: auto; height: 28px; padding: 0 11px; margin-right: 8px; border: none; border-radius: 14px; background: #fff; color: #191F28; box-shadow: inset 0 0 0 1.5px #191F28; font: inherit; font-size: 12.5px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   :root[data-theme="dark"] .lg-calc-btn { background: #0B0B0D; color: #F2F4F6; box-shadow: inset 0 0 0 1.5px #F2F4F6; }
   .lg-calc-ov { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; animation: lgGuideIn .18s ease; }
   .lg-calc-ov.out { opacity: 0; transition: opacity .18s; }
@@ -638,6 +638,24 @@
   .lg-calc-grip i { display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--ink-soft); opacity: .45; }
   .lg-calc-x { width: 26px; height: 26px; border: none; border-radius: 50%; background: transparent; color: var(--ink-soft); font: inherit; font-size: 18px; line-height: 1; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .lg-calc-sp { width: 26px; }
+  /* 집계 제외 표시 / 설정 버튼 */
+  .lg-ex-badge { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 8px; background: var(--tile); color: var(--ink-soft); font-size: 10.5px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; vertical-align: middle; }
+  .lg-manage-ex { border: none; border-radius: 10px; padding: 3px 9px; font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; background: var(--ink); color: var(--surface); }
+  .lg-manage-ex.off { background: var(--tile); color: var(--ink-soft); }
+  /* 글자는 선택되지 않고, 금액만 꾹 눌러 복사할 수 있어요 */
+  body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  input, textarea, select, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+  .lg-item-balance, .lg-total-value, .lg-tx-amount, .lg-table-amount, .lg-stamp-value { -webkit-user-select: all; user-select: all; -webkit-touch-callout: default; }
+  /* 미니계산기: 잡기 쉬운 손잡이 / 붙여넣기 */
+  .lg-calc { -webkit-touch-callout: none; }
+  .lg-calc-bar { height: 40px; margin: -10px -8px 2px; padding: 0 4px; }
+  .lg-calc-sub, .lg-calc-main { touch-action: none; cursor: grab; }
+  .lg-calc-grip { align-self: stretch; align-items: center; }
+  .lg-calc-grip i { width: 40px; height: 5px; }
+  .lg-calc-x { width: 34px; height: 34px; font-size: 19px; }
+  .lg-calc-paste { height: 28px; padding: 0 10px; border: none; border-radius: 14px; background: var(--tile); color: var(--ink-soft); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+  .lg-calc-paste:active { transform: scale(.96); }
+  .lg-calc-pin { display: block; width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 8px 10px; border: 1px dashed var(--ink-soft); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; -webkit-user-select: text; user-select: text; }
   .lg-ck { touch-action: manipulation; }
   :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-account-panel { background: #25262C; }
   :root[data-theme="dark"] .lg-ck.op, :root[data-theme="dark"] .lg-ck.fn { background: #33343C; }
@@ -1294,7 +1312,12 @@
     if (!raw) return;
     KeySound.down(); setTimeout(function () { KeySound.up(); }, 70); /* 키캡과 같은 소리 */
     var tokens = raw.split(/\s+/), re = /^(-?)(\d+)$/, m;
-    function add(item, mm, memo) { addTransaction(item, mm[1] === "-" ? "out" : "in", Number(mm[2]), memo, todayISO()); input.value = ""; }
+    function add(item, mm, memo) {
+      var go = function () { addTransaction(item, mm[1] === "-" ? "out" : "in", Number(mm[2]), memo, todayISO()); input.value = ""; };
+      if (getItem(item)) return go();
+      /* 없는 항목 이름이면 만들기 전에 한 번 물어봐요 (오타로 항목이 생기는 걸 막아요) */
+      lgConfirm('\'' + item + '\' 항목을 새로 만들까요?', { ok: "만들기", cancel: "취소" }).then(function (ok) { if (ok) go(); else input.focus(); });
+    }
     if (selectedItem) { /* 키캡을 눌러 둔 상태: 금액 내용 */
       if ((m = tokens[0].match(re))) return add(selectedItem, m, tokens.slice(1).join(" "));
       if (tokens.length >= 2 && (m = tokens[tokens.length - 1].match(re))) return add(selectedItem, m, tokens.slice(0, -1).join(" "));
@@ -1372,7 +1395,7 @@
     return new Promise(function (resolve) {
       var ov = document.createElement("div"); ov.className = "lg-dlg"; ov.setAttribute("role", "alertdialog"); ov.setAttribute("aria-modal", "true");
       ov.innerHTML = '<div class="lg-dlg-card"><div class="lg-dlg-msg"></div><div class="lg-dlg-row">' + (opt.single ? "" : '<button type="button" class="lg-dlg-cancel">' + (opt.cancel || "취소") + '</button>') + '<button type="button" class="lg-dlg-ok' + (opt.danger ? " danger" : "") + '">' + (opt.ok || "확인") + '</button></div></div>';
-      ov.querySelector(".lg-dlg-msg").textContent = message;
+      ov.querySelector(".lg-dlg-msg").textContent = message; ov.querySelector(".lg-dlg-msg").style.whiteSpace = "pre-line";
       function done(v) { ov.classList.add("out"); setTimeout(function () { ov.remove(); }, 160); resolve(v); }
       ov.querySelector(".lg-dlg-ok").addEventListener("click", function () { done(true); });
       var c = ov.querySelector(".lg-dlg-cancel"); if (c) c.addEventListener("click", function () { done(false); });
@@ -1391,14 +1414,14 @@
     var ov = document.createElement("div"); ov.id = "lgGuide"; ov.className = "lg-guide";
     ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
     ov.innerHTML = '<div class="lg-g-wrap">' +
-      '<div class="lg-g-head"><h2>버튼을 눌러<br>바로 기록해요</h2><p>입력은 한 줄이면 충분해요</p></div>' +
+      '<div class="lg-g-head"><h2>한 줄로<br>바로 써요</h2><p>지출은 금액 앞에 -를 붙여요</p></div>' +
       '<div class="lg-g-stage">' +
         '<div class="lg-g-input"><span class="lg-g-chip hidden">' + kcSvg("#6F7F9C") + '<b>용돈</b></span><span class="lg-g-ph">예: 식비 -9000 점심</span><button type="button" class="lg-g-add">추가</button></div>' +
         '<div class="lg-g-item"><span class="lg-g-tip">눌러보세요</span><span class="lg-g-tip lg-g-tip2 hidden">추가를 눌러보세요</span><button type="button" class="lg-g-key" aria-label="항목 버튼 눌러보기">' + kcSvg("#6F7F9C") + '</button><span class="lg-g-name">용돈</span><span class="lg-g-bal">253,583원</span></div>' +
       '</div>' +
       '<ol class="lg-g-steps">' +
-        '<li><i>1</i><div><b>항목 옆 버튼을 눌러요</b><span>입력창에 항목이 골라져요</span></div></li>' +
-        '<li><i>2</i><div><b>금액과 내용을 적고 추가를 눌러요</b><span>지출은 금액 앞에 -를 붙여요 (예: -9000)</span></div></li>' +
+        '<li><i>1</i><div><b>항목 금액 내용을 적어요</b><span>예: 식비 -9000 점심</span></div></li>' +
+        '<li><i>2</i><div><b>항목 옆 버튼을 누르면 항목은 생략해요</b><span>버튼을 누른 뒤 -9000 점심만 적어요</span></div></li>' +
         '<li><i>3</i><div><b>금액을 누르면 세부내역이 떠요</b><span>항목별 거래 내역을 한눈에 볼 수 있어요</span></div></li>' +
       '</ol>' +
       '<div class="lg-g-foot">항목은 \'항목 관리\'에서 추가·삭제할 수 있어요</div>' +
@@ -1494,6 +1517,16 @@
     mount();
   })();
 
+  /* 금액을 복사하면 '원'·쉼표를 빼고 숫자만 복사돼요 (계산기에 바로 붙여넣기 좋게) */
+  document.addEventListener("copy", function (e) {
+    try {
+      var t = String(window.getSelection() || "").replace(/\s/g, "");
+      var m = t.match(/^([+\-−]?)([\d,]+(?:\.\d+)?)원?$/);
+      if (!m || !e.clipboardData) return;
+      var sg = m[1] === "-" || m[1] === "−" ? "-" : "";
+      e.clipboardData.setData("text/plain", sg + m[2].replace(/,/g, "")); e.preventDefault();
+    } catch (x) {}
+  });
   (function setupCalc() {
     var hr = document.querySelector(".lg-header-right"), acc = document.getElementById("accountBtn");
     if (!hr || document.getElementById("calcBtn")) return;
@@ -1542,13 +1575,29 @@
       }
       paint();
     }
-    function close() { if (!ov) return; var o = ov; ov = null; if (o._onResize) window.removeEventListener("resize", o._onResize); o.classList.add("out"); setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 180); }
+    function parsePaste(t) {
+      t = String(t || "").replace(/[\u200b\uFEFF]/g, "").replace(/，/g, ",").replace(/[−–—]/g, "-").replace(/＋/g, "+").replace(/[xX*]/g, "×").replace(/\//g, "÷");
+      var s2 = t.replace(/[원₩￦$\s]/g, "").replace(/,/g, "");
+      if (/^[\d.+\-×÷]+$/.test(s2) && /[+\-×÷]/.test(s2.replace(/^-/, "")) && !/^\d{4}-\d{1,2}-\d{1,2}$/.test(s2)) return { expr: s2 };
+      var m = t.replace(/,/g, "").match(/-?\d+(?:\.\d+)?|-?\.\d+/);
+      return m ? { num: m[0] } : null;
+    }
+    function pasteText(text) {
+      var p = parsePaste(text), sub = ov && ov.querySelector(".lg-calc-sub");
+      if (!p) { if (sub) { sub.textContent = "붙여넣을 숫자가 없어요"; setTimeout(paint, 1300); } return; }
+      var add = p.expr || p.num;
+      if (justEq) { expr = ""; justEq = false; }
+      if (!/[+\-×÷]$/.test(expr) && expr) expr = p.expr ? "" : expr.replace(/[\d.]+$/, "");
+      if ((expr + add).length > 40) { if (sub) { sub.textContent = "너무 길어요"; setTimeout(paint, 1300); } return; }
+      expr += add; paint();
+    }
+    function close() { if (!ov) return; var o = ov; ov = null; if (o._onResize) window.removeEventListener("resize", o._onResize); if (o._onPaste) document.removeEventListener("paste", o._onPaste); o.classList.add("out"); setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 180); }
     function open() {
       if (ov) return;
       expr = ""; justEq = false;
       ov = document.createElement("div"); ov.className = "lg-calc-ov";
       var keys = [["C","fn"],["⌫","fn"],["÷","op"],["×","op"],["7"],["8"],["9"],["-","op"],["4"],["5"],["6"],["+","op"],["1"],["2"],["3"],["=","eq"],["0"],["."]];
-      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-bar"><span class="lg-calc-sp"></span><span class="lg-calc-grip"><i></i></span><button type="button" class="lg-calc-x" aria-label="계산기 닫기">✕</button></div><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
+      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-bar"><button type="button" class="lg-calc-paste" aria-label="클립보드 숫자 붙여넣기">붙여넣기</button><span class="lg-calc-grip"><i></i></span><button type="button" class="lg-calc-x" aria-label="계산기 닫기">✕</button></div><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
       keys.forEach(function (k) { h += '<button type="button" class="lg-ck ' + (k[1] || "") + '" data-k="' + k[0] + '">' + (k[0] === "-" ? "−" : k[0]) + '</button>'; });
       h += '</div></div>';
       ov.innerHTML = h; document.body.appendChild(ov); paint();
@@ -1562,19 +1611,48 @@
       function place(x, y) { var c = clamp(x, y); pn.style.left = c.x + "px"; pn.style.top = c.y + "px"; return c; }
       if (pos && typeof pos.x === "number" && typeof pos.y === "number") place(pos.x, pos.y);
       else place(window.innerWidth - pn.offsetWidth - 14, Math.round(r.bottom + 10));
+      /* 손잡이·표시 영역 어디서든 잡아서 옮길 수 있어요. 길게 눌러도 메뉴가 뜨지 않게 막아요. */
       var drag = null;
-      bar.addEventListener("pointerdown", function (e) {
-        if (e.target.closest(".lg-calc-x")) return;
+      pn.addEventListener("contextmenu", function (e) { if (!e.target.closest(".lg-calc-pin")) e.preventDefault(); });
+      pn.addEventListener("pointerdown", function (e) {
+        if (drag || e.button > 0) return;
+        if (!e.target.closest(".lg-calc-bar, .lg-calc-sub, .lg-calc-main")) return;
+        if (e.target.closest("button, input")) return;
         drag = { id: e.pointerId, dx: e.clientX - pn.offsetLeft, dy: e.clientY - pn.offsetTop };
-        bar.classList.add("drag"); try { bar.setPointerCapture(e.pointerId); } catch (x) {}
+        bar.classList.add("drag"); try { pn.setPointerCapture(e.pointerId); } catch (x) {}
         e.preventDefault();
       });
-      bar.addEventListener("pointermove", function (e) { if (!drag || e.pointerId !== drag.id) return; place(e.clientX - drag.dx, e.clientY - drag.dy); });
+      pn.addEventListener("pointermove", function (e) { if (!drag || e.pointerId !== drag.id) return; place(e.clientX - drag.dx, e.clientY - drag.dy); e.preventDefault(); });
       var endDrag = function (e) {
         if (!drag || (e && e.pointerId !== drag.id)) return; drag = null; bar.classList.remove("drag");
         try { localStorage.setItem(POS, JSON.stringify({ x: pn.offsetLeft, y: pn.offsetTop })); } catch (x) {}
       };
-      bar.addEventListener("pointerup", endDrag); bar.addEventListener("pointercancel", endDrag);
+      pn.addEventListener("pointerup", endDrag); pn.addEventListener("pointercancel", endDrag); pn.addEventListener("lostpointercapture", endDrag);
+      /* 붙여넣기: 복사해 둔 숫자(앱 안·다른 앱)를 바로 계산기에 넣어요 */
+      var pb = ov.querySelector(".lg-calc-paste"), pd = false, pin = null;
+      function hidePin() { if (pin && pin.parentNode) pin.parentNode.removeChild(pin); pin = null; }
+      function showPin() {
+        if (pin) { pin.focus(); return; }
+        pin = document.createElement("input"); pin.type = "text"; pin.className = "lg-calc-pin"; pin.placeholder = "여기를 길게 눌러 붙여넣기"; pin.setAttribute("autocomplete", "off");
+        pn.insertBefore(pin, ov.querySelector(".lg-calc-sub"));
+        pin.addEventListener("paste", function (e) { var t = ""; try { t = e.clipboardData.getData("text"); } catch (x) {} e.preventDefault(); pasteText(t); hidePin(); });
+        pin.addEventListener("input", function () { var t = pin.value; if (t) { pasteText(t); hidePin(); } });
+        setTimeout(function () { if (pin) pin.focus(); }, 30);
+      }
+      function doPaste() {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then(function (t) { pasteText(t); hidePin(); }, function () { showPin(); });
+        } else showPin();
+      }
+      pb.addEventListener("pointerdown", function (e) { pd = true; e.stopPropagation(); });
+      pb.addEventListener("pointerup", function () { if (pd) { pd = false; doPaste(); } });
+      pb.addEventListener("pointercancel", function () { pd = false; });
+      pb.addEventListener("click", function (e) { if (e.detail === 0) doPaste(); }); /* 키보드 */
+      ov._onPaste = function (e) {
+        var t = e.target; if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !(t.classList && t.classList.contains("lg-calc-pin"))) return;
+        var tx = ""; try { tx = e.clipboardData.getData("text"); } catch (x) {} if (!tx) return; e.preventDefault(); pasteText(tx); hidePin();
+      };
+      document.addEventListener("paste", ov._onPaste);
       ov._onResize = function () { place(pn.offsetLeft, pn.offsetTop); };
       window.addEventListener("resize", ov._onResize);
       var xb = ov.querySelector(".lg-calc-x"), xd = false;
@@ -1770,7 +1848,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     for (const it of raw.items) {
       if (!it || typeof it.name !== "string" || !it.name.trim() || names.has(it.name)) continue;
       names.add(it.name);
-      items.push({ name: it.name, initialBalance: Number.isFinite(it.initialBalance) ? it.initialBalance : 0, color: typeof it.color === "string" ? it.color : palColor(items.length) });
+      items.push({ name: it.name, initialBalance: Number.isFinite(it.initialBalance) ? it.initialBalance : 0, color: typeof it.color === "string" ? it.color : palColor(items.length), ex: !!it.ex });
     }
     const txs = [];
     for (const t of raw.transactions) {
@@ -2085,7 +2163,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
 
   function render() {
     refreshItemColors();
-    const total = state.items.reduce((s, it) => s + currentBalance(it.name), 0);
+    const total = state.items.reduce((s, it) => s + (it.ex ? 0 : currentBalance(it.name)), 0);
     const totalEl = document.getElementById("totalValue");
     totalEl.textContent = formatWon(total);
     totalEl.className = "lg-total-value" + (total < 0 ? " negative" : ""); if (window.__lgHideTotal) window.__lgHideTotal(totalEl);
@@ -2101,6 +2179,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
       }
       return '<div class="lg-manage-row"><span><svg class="lg-mdot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">' + (function () { var id = "lgmg" + (++lgGN); return "<defs>" + lgGrad(id, dc(it.color)) + "</defs><rect width=\"12\" height=\"12\" rx=\"4\" fill=\"url(#" + id + ")\"/>"; })() + '</svg>' + esc(it.name) + '</span>' +
         '<span class="lg-manage-row-btns">' +
+          '<button class="lg-manage-ex' + (it.ex ? ' off' : '') + '" data-toggleex="' + esc(it.name) + '" aria-pressed="' + (it.ex ? 'false' : 'true') + '">' + (it.ex ? '집계 제외' : '집계 포함') + '</button>' +
           '<button class="lg-manage-edit" data-editname="' + esc(it.name) + '">수정</button>' +
           '<button class="lg-manage-del" data-remove="' + esc(it.name) + '">삭제</button>' +
         '</span></div>';
@@ -2154,7 +2233,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
         return '<div class="lg-item-card' + (isOpen ? ' open' + (window.__lgAnim ? ' anim' : '') : '') + (selectedItem === item ? ' sel' : '') + '" data-item="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' +
           '<div class="lg-item-head" data-toggle="' + esc(item) + '">' +
             '<div class="lg-item-name-row"><span class="lg-item-dot lg-keycap' + (selectedItem === item ? ' sel' : '') + '" data-key="' + esc(item) + '" style="--kc:' + dc(it.color) + '">' + kcSvg(dc(it.color)) + '</span>' +
-            '<span class="lg-item-name">' + esc(item) + '</span></div>' +
+            '<span class="lg-item-name">' + esc(item) + '</span>' + (it.ex ? '<span class="lg-ex-badge">집계 제외</span>' : '') + '</div>' +
             '<span class="lg-item-balance' + (bal < 0 ? ' negative' : '') + '">' + formatWon(bal) + '</span>' +
           '</div>' +
           '<div class="lg-item-body">' +
@@ -2198,8 +2277,10 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     const histStart = historyShowAll ? rangeStartMonth(historyRange) : null;
     const all = (historyShowAll ? state.transactions.filter((t) => !histStart || t.date.slice(0, 7) >= histStart) : state.transactions.filter((t) => t.date.slice(0, 7) === historyMonth))
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
-    const totalIn = all.filter((t) => t.type === "in").reduce((s, t) => s + t.amount, 0);
-    const totalOut = all.filter((t) => t.type === "out").reduce((s, t) => s + t.amount, 0);
+    const exSet = new Set(state.items.filter((i) => i.ex).map((i) => i.name));
+    const allCnt = all.filter((t) => !exSet.has(t.item)); /* 집계 제외 항목은 합계·차트에서 빼요 */
+    const totalIn = allCnt.filter((t) => t.type === "in").reduce((s, t) => s + t.amount, 0);
+    const totalOut = allCnt.filter((t) => t.type === "out").reduce((s, t) => s + t.amount, 0);
     document.getElementById("totalIn").textContent = formatWon(totalIn);
     document.getElementById("totalOut").textContent = formatWon(totalOut);
     const netEl = document.getElementById("netChange");
@@ -2222,8 +2303,8 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
         '</div>';
     }
 
-    renderItemBreakdown("incomeByItemChart", "in", "incomeByItemTitle", all);
-    renderItemBreakdown("expenseByItemChart", "out", "expenseByItemTitle", all);
+    renderItemBreakdown("incomeByItemChart", "in", "incomeByItemTitle", allCnt);
+    renderItemBreakdown("expenseByItemChart", "out", "expenseByItemTitle", allCnt);
 
     const histEl = document.getElementById("allHistory");
     if (all.length === 0) {
@@ -2333,6 +2414,9 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
         openItem = item;
         render();
       };
+    });
+    document.querySelectorAll("[data-toggleex]").forEach((el) => {
+      el.onclick = () => { const it = getItem(el.getAttribute("data-toggleex")); if (!it) return; it.ex = !it.ex; saveState(); render(); };
     });
     document.querySelectorAll("[data-editname]").forEach((el) => {
       el.onclick = () => { editingItemName = el.getAttribute("data-editname"); render(); };
