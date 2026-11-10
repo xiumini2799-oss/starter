@@ -640,8 +640,9 @@
   .lg-calc-sp { width: 26px; }
   /* 집계 제외 표시 / 설정 버튼 */
   .lg-ex-badge { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 8px; background: var(--tile); color: var(--ink-soft); font-size: 10.5px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; vertical-align: middle; }
-  .lg-manage-ex { border: none; border-radius: 10px; padding: 3px 9px; font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; background: var(--ink); color: var(--surface); }
-  .lg-manage-ex.off { background: var(--tile); color: var(--ink-soft); }
+  .lg-manage-ex { width: 30px; height: 28px; padding: 0; border: none; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: var(--tile); color: var(--ink); -webkit-tap-highlight-color: transparent; }
+  .lg-manage-ex.off { color: var(--ink-soft); opacity: .6; }
+  .lg-won { -webkit-user-select: none; user-select: none; }
   /* 글자는 선택되지 않고, 금액만 꾹 눌러 복사할 수 있어요 */
   body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   input, textarea, select, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
@@ -770,7 +771,7 @@
       <div class="lg-quick-panel">
         <div id="quickTarget" class="lg-quick-target hidden"></div>
         <div class="lg-quick-row">
-          <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: 식비 -9000 점심" enterkeyhint="done" autocomplete="off" />
+          <input type="text" id="quickInput" class="lg-quick-input" placeholder="예: 용돈 -9000 점심" enterkeyhint="done" autocomplete="off" />
           <button id="quickBtn" class="lg-quick-btn">추가</button>
         </div>
         <div id="quickError" class="lg-error hidden"></div>
@@ -1246,7 +1247,7 @@
     if (!selCard) {
       if (chip) chip.remove();
       if (panel) panel.classList.remove("has-target");
-      if (inp) inp.placeholder = "예: 식비 -9000 점심";
+      if (inp) inp.placeholder = window.__lgEx || "예: 용돈 -9000 점심";
       return;
     }
     var kcv = selCard.querySelector("[data-key]").style.getPropertyValue("--kc") || "#8A7C52";
@@ -1325,7 +1326,7 @@
       if (tokens.length >= 2 && (m = tokens[1].match(re))) return add(tokens[0], m, tokens.slice(2).join(" "));
       if (tokens.length >= 3 && (m = tokens[tokens.length - 2].match(re))) return add(tokens[tokens.length - 1], m, tokens.slice(0, -2).join(" "));
     }
-    showQuickError(selectedItem ? "이렇게 적어볼까요? -9000 점심" : "이렇게 적어볼까요? 식비 -9000 점심");
+    showQuickError(selectedItem ? "이렇게 적어볼까요? -9000 점심" : "이렇게 적어볼까요? 용돈 -9000 점심");
   }
 
 
@@ -1416,11 +1417,11 @@
     ov.innerHTML = '<div class="lg-g-wrap">' +
       '<div class="lg-g-head"><h2>한 줄로<br>바로 써요</h2><p>지출은 금액 앞에 -를 붙여요</p></div>' +
       '<div class="lg-g-stage">' +
-        '<div class="lg-g-input"><span class="lg-g-chip hidden">' + kcSvg("#6F7F9C") + '<b>용돈</b></span><span class="lg-g-ph">예: 식비 -9000 점심</span><button type="button" class="lg-g-add">추가</button></div>' +
+        '<div class="lg-g-input"><span class="lg-g-chip hidden">' + kcSvg("#6F7F9C") + '<b>용돈</b></span><span class="lg-g-ph">예: 용돈 -9000 점심</span><button type="button" class="lg-g-add">추가</button></div>' +
         '<div class="lg-g-item"><span class="lg-g-tip">눌러보세요</span><span class="lg-g-tip lg-g-tip2 hidden">추가를 눌러보세요</span><button type="button" class="lg-g-key" aria-label="항목 버튼 눌러보기">' + kcSvg("#6F7F9C") + '</button><span class="lg-g-name">용돈</span><span class="lg-g-bal">253,583원</span></div>' +
       '</div>' +
       '<ol class="lg-g-steps">' +
-        '<li><i>1</i><div><b>항목 금액 내용을 적어요</b><span>예: 식비 -9000 점심</span></div></li>' +
+        '<li><i>1</i><div><b>항목 금액 내용을 적어요</b><span>예: 용돈 -9000 점심</span></div></li>' +
         '<li><i>2</i><div><b>항목 옆 버튼을 누르면 항목은 생략해요</b><span>버튼을 누른 뒤 -9000 점심만 적어요</span></div></li>' +
         '<li><i>3</i><div><b>금액을 누르면 세부내역이 떠요</b><span>항목별 거래 내역을 한눈에 볼 수 있어요</span></div></li>' +
       '</ol>' +
@@ -1453,7 +1454,7 @@
     var addBtn = ov.querySelector(".lg-g-add"), balEl = ov.querySelector(".lg-g-bal"), tip2 = ov.querySelector(".lg-g-tip2"), itemRow = ov.querySelector(".lg-g-item");
     var sel = false, bal = 253583, busy = false, added = false;
     function setSel(on) {
-      sel = on; chip.classList.toggle("hidden", !on); ph.textContent = on ? "-9000 점심" : "예: 식비 -9000 점심"; ph.classList.toggle("typed", on);
+      sel = on; chip.classList.toggle("hidden", !on); ph.textContent = on ? "-9000 점심" : "예: 용돈 -9000 점심"; ph.classList.toggle("typed", on);
       if (tip2) tip2.classList.toggle("hidden", !(on && !added));
     }
     function won(n) { return n.toLocaleString("ko-KR") + "원"; }
@@ -1500,7 +1501,7 @@
       var el = document.getElementById("totalValue"); if (!el) return;
       if (el.dataset.real === undefined) el.dataset.real = el.textContent;
       el.textContent = hidden ? "•••••" : el.dataset.real;
-      document.body.classList.toggle("lg-hide-amt", hidden);
+      document.body.classList.toggle("lg-hide-amt", hidden); if (window.__lgWrapWon) window.__lgWrapWon();
       var b = btn();
       if (b) { b.innerHTML = hidden ? EYE_OFF : EYE; b.setAttribute("aria-label", hidden ? "잔액 보이기" : "잔액 숨기기"); b.setAttribute("aria-pressed", hidden ? "true" : "false"); }
     }
@@ -1937,6 +1938,18 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
 
   function makeId() { return (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2)); }
   function todayISO() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+  var LG_EYE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var LG_EYE_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.5 6.6A16.6 16.6 0 0 0 2 12s3.6 7 10 7a10.3 10.3 0 0 0 4.1-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  /* 금액 끝의 '원'은 선택되지 않게 분리해요 (꾹 눌러 잡으면 숫자만 잡혀요) */
+  function lgWrapWon() {
+    document.querySelectorAll(".lg-item-balance,.lg-total-value,.lg-tx-amount,.lg-table-amount,.lg-stamp-value").forEach(function (el) {
+      if (el.children.length) return;
+      var t = el.textContent; if (t.charAt(t.length - 1) !== "원") return;
+      el.textContent = t.slice(0, -1);
+      var w = document.createElement("span"); w.className = "lg-won"; w.textContent = "원"; el.appendChild(w);
+    });
+  }
+  window.__lgWrapWon = lgWrapWon;
   function formatWon(n) { const sign = n < 0 ? "-" : ""; return sign + Math.abs(Math.round(n)).toLocaleString("ko-KR") + "원"; }
   function formatPct(num) {
     const rounded = Math.round(num * 10) / 10;
@@ -2179,7 +2192,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
       }
       return '<div class="lg-manage-row"><span><svg class="lg-mdot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">' + (function () { var id = "lgmg" + (++lgGN); return "<defs>" + lgGrad(id, dc(it.color)) + "</defs><rect width=\"12\" height=\"12\" rx=\"4\" fill=\"url(#" + id + ")\"/>"; })() + '</svg>' + esc(it.name) + '</span>' +
         '<span class="lg-manage-row-btns">' +
-          '<button class="lg-manage-ex' + (it.ex ? ' off' : '') + '" data-toggleex="' + esc(it.name) + '" aria-pressed="' + (it.ex ? 'false' : 'true') + '">' + (it.ex ? '집계 제외' : '집계 포함') + '</button>' +
+          '<button class="lg-manage-ex' + (it.ex ? ' off' : '') + '" data-toggleex="' + esc(it.name) + '" aria-pressed="' + (it.ex ? 'false' : 'true') + '" aria-label="' + (it.ex ? '집계 제외됨 (누르면 포함)' : '집계 포함됨 (누르면 제외)') + '" title="' + (it.ex ? '집계 제외' : '집계 포함') + '">' + (it.ex ? LG_EYE_OFF : LG_EYE) + '</button>' +
           '<button class="lg-manage-edit" data-editname="' + esc(it.name) + '">수정</button>' +
           '<button class="lg-manage-del" data-remove="' + esc(it.name) + '">삭제</button>' +
         '</span></div>';
@@ -2445,6 +2458,8 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     });
   }
 
+  (function () { var __r = render; render = function () { var r = __r.apply(this, arguments); lgWrapWon(); try { var n0 = state.items.length ? state.items[0].name : "용돈"; window.__lgEx = "예: " + n0 + " -9000 점심"; var q0 = document.getElementById("quickInput"), pn0 = document.querySelector(".lg-quick-panel"); if (q0 && !(pn0 && pn0.classList.contains("has-target"))) q0.placeholder = window.__lgEx; } catch (e) {} return r; }; })();
+  lgWrapWon();
   document.getElementById("quickBtn").onclick = handleQuickAdd;
   document.getElementById("quickInput").addEventListener("keydown", (e) => { if (e.key === "Enter") handleQuickAdd(); });
 
