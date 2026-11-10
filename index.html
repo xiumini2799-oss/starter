@@ -654,7 +654,7 @@
   .lg-calc-grip { align-self: stretch; align-items: center; }
   .lg-calc-grip i { width: 40px; height: 5px; }
   .lg-calc-x { width: 34px; height: 34px; font-size: 19px; }
-  .lg-calc-paste { height: 28px; padding: 0 10px; border: none; border-radius: 14px; background: var(--tile); color: var(--ink-soft); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+  .lg-calc-paste { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; box-sizing: border-box; white-space: nowrap; outline: none; caret-color: transparent; -webkit-user-select: text; user-select: text; border: none; border-radius: 14px; background: var(--tile); color: var(--ink-soft); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
   .lg-calc-paste:active { transform: scale(.96); }
   .lg-calc-pin { display: block; width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 8px 10px; border: 1px dashed var(--ink-soft); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; -webkit-user-select: text; user-select: text; }
   .lg-ck { touch-action: manipulation; }
@@ -1598,7 +1598,7 @@
       expr = ""; justEq = false;
       ov = document.createElement("div"); ov.className = "lg-calc-ov";
       var keys = [["C","fn"],["⌫","fn"],["÷","op"],["×","op"],["7"],["8"],["9"],["-","op"],["4"],["5"],["6"],["+","op"],["1"],["2"],["3"],["=","eq"],["0"],["."]];
-      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-bar"><button type="button" class="lg-calc-paste" aria-label="클립보드 숫자 붙여넣기">붙여넣기</button><span class="lg-calc-grip"><i></i></span><button type="button" class="lg-calc-x" aria-label="계산기 닫기">✕</button></div><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
+      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-bar"><span class="lg-calc-paste" contenteditable="true" inputmode="none" spellcheck="false" role="button" aria-label="클립보드 숫자 붙여넣기">붙여넣기</span><span class="lg-calc-grip"><i></i></span><button type="button" class="lg-calc-x" aria-label="계산기 닫기">✕</button></div><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
       keys.forEach(function (k) { h += '<button type="button" class="lg-ck ' + (k[1] || "") + '" data-k="' + k[0] + '">' + (k[0] === "-" ? "−" : k[0]) + '</button>'; });
       h += '</div></div>';
       ov.innerHTML = h; document.body.appendChild(ov); paint();
@@ -1618,7 +1618,7 @@
       pn.addEventListener("pointerdown", function (e) {
         if (drag || e.button > 0) return;
         if (!e.target.closest(".lg-calc-bar, .lg-calc-sub, .lg-calc-main")) return;
-        if (e.target.closest("button, input")) return;
+        if (e.target.closest("button, input, .lg-calc-paste")) return;
         drag = { id: e.pointerId, dx: e.clientX - pn.offsetLeft, dy: e.clientY - pn.offsetTop };
         bar.classList.add("drag"); try { pn.setPointerCapture(e.pointerId); } catch (x) {}
         e.preventDefault();
@@ -1630,25 +1630,25 @@
       };
       pn.addEventListener("pointerup", endDrag); pn.addEventListener("pointercancel", endDrag); pn.addEventListener("lostpointercapture", endDrag);
       /* 붙여넣기: 복사해 둔 숫자(앱 안·다른 앱)를 바로 계산기에 넣어요 */
-      var pb = ov.querySelector(".lg-calc-paste"), pd = false, pin = null;
+      var pb = ov.querySelector(".lg-calc-paste"), pin = null;
       function hidePin() { if (pin && pin.parentNode) pin.parentNode.removeChild(pin); pin = null; }
       function showPin() {
         if (pin) { pin.focus(); return; }
-        pin = document.createElement("input"); pin.type = "text"; pin.className = "lg-calc-pin"; pin.placeholder = "여기를 길게 눌러 붙여넣기"; pin.setAttribute("autocomplete", "off");
+        pin = document.createElement("input"); pin.type = "text"; pin.className = "lg-calc-pin"; pin.placeholder = "여기를 눌러 붙여넣기"; pin.setAttribute("autocomplete", "off");
         pn.insertBefore(pin, ov.querySelector(".lg-calc-sub"));
         pin.addEventListener("paste", function (e) { var t = ""; try { t = e.clipboardData.getData("text"); } catch (x) {} e.preventDefault(); pasteText(t); hidePin(); });
         pin.addEventListener("input", function () { var t = pin.value; if (t) { pasteText(t); hidePin(); } });
         setTimeout(function () { if (pin) pin.focus(); }, 30);
       }
       function doPaste() {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-          navigator.clipboard.readText().then(function (t) { pasteText(t); hidePin(); }, function () { showPin(); });
-        } else showPin();
+        showPin(); /* 클립보드 권한 창이 뜨지 않도록, 입력칸에 직접 붙여넣어요 */
       }
-      pb.addEventListener("pointerdown", function (e) { pd = true; e.stopPropagation(); });
-      pb.addEventListener("pointerup", function () { if (pd) { pd = false; doPaste(); } });
-      pb.addEventListener("pointercancel", function () { pd = false; });
-      pb.addEventListener("click", function (e) { if (e.detail === 0) doPaste(); }); /* 키보드 */
+      /* 붙여넣기 칸을 누르면 폰이 "붙여넣기" 말풍선을 띄워요 (권한 창 없이) */
+      pb.addEventListener("beforeinput", function (e) { e.preventDefault(); });
+      pb.addEventListener("keydown", function (e) { if (!(e.ctrlKey || e.metaKey)) e.preventDefault(); });
+      pb.addEventListener("cut", function (e) { e.preventDefault(); });
+      pb.addEventListener("drop", function (e) { e.preventDefault(); });
+      pb.addEventListener("paste", function () { setTimeout(function () { try { pb.textContent = "붙여넣기"; pb.blur(); } catch (x) {} }, 0); });
       ov._onPaste = function (e) {
         var t = e.target; if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !(t.classList && t.classList.contains("lg-calc-pin"))) return;
         var tx = ""; try { tx = e.clipboardData.getData("text"); } catch (x) {} if (!tx) return; e.preventDefault(); pasteText(tx); hidePin();
