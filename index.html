@@ -577,7 +577,7 @@
   .lg-g-wrap { height: 100%; overflow-y: auto; scrollbar-width: none; }
   .lg-g-wrap::-webkit-scrollbar { display: none; width: 0; }
   @media (max-height: 780px) { .lg-g-wrap { padding-top: 36px; } .lg-g-stage { margin-top: 20px; } .lg-g-steps { margin-top: 20px; gap: 14px; } }
-  .lg-calc-btn { width: auto; height: 28px; padding: 0 11px; margin-right: 8px; border: none; border-radius: 14px; background: #fff; color: #191F28; box-shadow: inset 0 0 0 1.5px #191F28; font: inherit; font-size: 12.5px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .lg-calc-btn { width: auto; height: 28px; padding: 0 11px; margin-right: 8px; border: none; border-radius: 14px; background: #fff; color: #191F28; box-shadow: inset 0 0 0 1.5px #191F28; font: inherit; font-size: 12.5px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; line-height: 1; padding-bottom: 2px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   :root[data-theme="dark"] .lg-calc-btn { background: #0B0B0D; color: #F2F4F6; box-shadow: inset 0 0 0 1.5px #F2F4F6; }
   .lg-calc-ov { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; animation: lgGuideIn .18s ease; }
   .lg-calc-ov.out { opacity: 0; transition: opacity .18s; }
@@ -646,7 +646,7 @@
   /* 글자는 선택되지 않고, 금액만 꾹 눌러 복사할 수 있어요 */
   body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   input, textarea, select, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
-  .lg-item-balance, .lg-total-value, .lg-tx-amount, .lg-table-amount, .lg-stamp-value { -webkit-user-select: all; user-select: all; -webkit-touch-callout: default; }
+  .lg-item-balance, .lg-total-value, .lg-tx-amount, .lg-table-amount, .lg-stamp-value { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; } /* 톡 누르면 선택되지 않고, 꾹 눌러야 숫자가 잡혀요 */
   /* 미니계산기: 잡기 쉬운 손잡이 / 붙여넣기 */
   .lg-calc { -webkit-touch-callout: none; }
   .lg-calc-bar { height: 40px; margin: -10px -8px 2px; padding: 0 4px; }
@@ -656,6 +656,7 @@
   .lg-calc-x { width: 34px; height: 34px; font-size: 19px; }
   .lg-calc-paste { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; box-sizing: border-box; white-space: nowrap; outline: none; caret-color: transparent; -webkit-user-select: text; user-select: text; border: none; border-radius: 14px; background: var(--tile); color: var(--ink-soft); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
   .lg-calc-paste:active { transform: scale(.96); }
+  .lg-calc-paste:empty::before { content: attr(data-ph); }
   .lg-calc-pin { display: block; width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 8px 10px; border: 1px dashed var(--ink-soft); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; -webkit-user-select: text; user-select: text; }
   .lg-ck { touch-action: manipulation; }
   :root[data-theme="dark"] .lg-calc, :root[data-theme="dark"] .lg-account-panel { background: #25262C; }
@@ -1598,7 +1599,7 @@
       expr = ""; justEq = false;
       ov = document.createElement("div"); ov.className = "lg-calc-ov";
       var keys = [["C","fn"],["⌫","fn"],["÷","op"],["×","op"],["7"],["8"],["9"],["-","op"],["4"],["5"],["6"],["+","op"],["1"],["2"],["3"],["=","eq"],["0"],["."]];
-      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-bar"><span class="lg-calc-paste" contenteditable="true" inputmode="none" spellcheck="false" role="button" aria-label="클립보드 숫자 붙여넣기">붙여넣기</span><span class="lg-calc-grip"><i></i></span><button type="button" class="lg-calc-x" aria-label="계산기 닫기">✕</button></div><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
+      var h = '<div class="lg-calc" role="dialog" aria-label="계산기"><div class="lg-calc-bar"><span class="lg-calc-paste" contenteditable="true" inputmode="none" spellcheck="false" role="button" data-ph="붙여넣기" aria-label="클립보드 숫자 붙여넣기"></span><span class="lg-calc-grip"><i></i></span><button type="button" class="lg-calc-x" aria-label="계산기 닫기">✕</button></div><div class="lg-calc-sub"></div><div class="lg-calc-main">0</div><div class="lg-calc-keys">';
       keys.forEach(function (k) { h += '<button type="button" class="lg-ck ' + (k[1] || "") + '" data-k="' + k[0] + '">' + (k[0] === "-" ? "−" : k[0]) + '</button>'; });
       h += '</div></div>';
       ov.innerHTML = h; document.body.appendChild(ov); paint();
@@ -1614,7 +1615,7 @@
       else place(window.innerWidth - pn.offsetWidth - 14, Math.round(r.bottom + 10));
       /* 손잡이·표시 영역 어디서든 잡아서 옮길 수 있어요. 길게 눌러도 메뉴가 뜨지 않게 막아요. */
       var drag = null;
-      pn.addEventListener("contextmenu", function (e) { if (!e.target.closest(".lg-calc-pin")) e.preventDefault(); });
+      pn.addEventListener("contextmenu", function (e) { if (!e.target.closest(".lg-calc-pin, .lg-calc-paste")) e.preventDefault(); });
       pn.addEventListener("pointerdown", function (e) {
         if (drag || e.button > 0) return;
         if (!e.target.closest(".lg-calc-bar, .lg-calc-sub, .lg-calc-main")) return;
@@ -1648,7 +1649,7 @@
       pb.addEventListener("keydown", function (e) { if (!(e.ctrlKey || e.metaKey)) e.preventDefault(); });
       pb.addEventListener("cut", function (e) { e.preventDefault(); });
       pb.addEventListener("drop", function (e) { e.preventDefault(); });
-      pb.addEventListener("paste", function () { setTimeout(function () { try { pb.textContent = "붙여넣기"; pb.blur(); } catch (x) {} }, 0); });
+      pb.addEventListener("paste", function () { setTimeout(function () { try { pb.textContent = ""; pb.blur(); } catch (x) {} }, 0); });
       ov._onPaste = function (e) {
         var t = e.target; if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !(t.classList && t.classList.contains("lg-calc-pin"))) return;
         var tx = ""; try { tx = e.clipboardData.getData("text"); } catch (x) {} if (!tx) return; e.preventDefault(); pasteText(tx); hidePin();
