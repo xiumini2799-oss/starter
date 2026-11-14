@@ -1687,7 +1687,6 @@
     window.__lgBackHook = function () { if (ov) { close(); return true; } return false; };
   })();
   (function setupGuide() {
-    try { var ap = document.getElementById("accountPanel"); if (ap) { var vv = document.createElement("div"); vv.className = "lg-version"; vv.textContent = "버전 " + LG_VERSION; ap.appendChild(vv); } } catch (e) {}
     try { /* 지난 버전의 표시는 지워서 저장 공간에 쌓이지 않게 */
       Object.keys(localStorage).forEach(function (k) { if (k.indexOf("household-ledger-guide-seen") === 0 && k !== FLAG_GUIDE) localStorage.removeItem(k); });
     } catch (e) {}
