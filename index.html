@@ -513,7 +513,8 @@
   .lg-dlg { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 24px; animation: lgGuideIn .15s ease; }
   .lg-dlg.out { opacity: 0; transition: opacity .16s; }
   .lg-dlg-card { width: 100%; max-width: 320px; background: var(--surface); color: var(--ink); border-radius: 22px; padding: 24px 20px 16px; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
-  .lg-dlg-msg { font-size: 15px; line-height: 1.55; font-weight: 600; text-align: center; white-space: pre-line; }
+  .lg-dlg-msg { font-size: 15px; line-height: 1.55; font-weight: 600; text-align: center; white-space: pre-line; word-break: keep-all; }
+  .lg-dlg-sub { margin-top: 8px; font-size: 13px; line-height: 1.5; font-weight: 400; text-align: center; color: var(--ink-soft); word-break: keep-all; }
   .lg-dlg-row { display: flex; gap: 8px; margin-top: 20px; }
   .lg-dlg-row button { flex: 1; padding: 13px; border: none; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
   .lg-dlg-cancel { background: var(--tile); color: var(--ink); }
@@ -1104,7 +1105,7 @@
   document.getElementById("loginBtnInline").onclick = async () => {
     if (!window.__lgSignIn) return;
     if (guestMode && (state.items.length > 0 || state.transactions.length > 0)) {
-      const ok = await lgConfirm("기존 계정으로 로그인하면 게스트 기록은 사라져요.\n(새 계정이면 그대로 옮겨져요)", { ok: "로그인" });
+      const ok = await lgConfirm("기존 계정으로 로그인하면\n게스트 기록은 사라져요.", { ok: "로그인", sub: "새 계정이면 그대로 옮겨져요" });
       if (!ok) return;
     }
     window.__lgSignIn();
@@ -1433,6 +1434,7 @@
       var ov = document.createElement("div"); ov.className = "lg-dlg"; ov.setAttribute("role", "alertdialog"); ov.setAttribute("aria-modal", "true");
       ov.innerHTML = '<div class="lg-dlg-card"><div class="lg-dlg-msg"></div><div class="lg-dlg-row">' + (opt.single ? "" : '<button type="button" class="lg-dlg-cancel">' + (opt.cancel || "취소") + '</button>') + '<button type="button" class="lg-dlg-ok' + (opt.danger ? " danger" : "") + '">' + (opt.ok || "확인") + '</button></div></div>';
       ov.querySelector(".lg-dlg-msg").textContent = message; ov.querySelector(".lg-dlg-msg").style.whiteSpace = "pre-line";
+      if (opt.sub) { var sb = document.createElement("div"); sb.className = "lg-dlg-sub"; sb.textContent = opt.sub; ov.querySelector(".lg-dlg-msg").after(sb); }
       function done(v) { ov.classList.add("out"); setTimeout(function () { ov.remove(); }, 160); resolve(v); }
       ov.querySelector(".lg-dlg-ok").addEventListener("click", function () { done(true); });
       var c = ov.querySelector(".lg-dlg-cancel"); if (c) c.addEventListener("click", function () { done(false); });
