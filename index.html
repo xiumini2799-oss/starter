@@ -900,8 +900,14 @@
         }
       };
       window.__lgSignOut = async () => {
+        const outUid = currentUser ? currentUser.uid : null;
+        let synced = !lgCloudDirty;
+        if (!synced && navigator.onLine !== false) { try { synced = await window.__lgSaveCloud(state); } catch (e) {} }
         try { await signOut(auth); } catch (e) {}
+        // 클라우드에 다 올라간 경우에만 이 기기의 계정용 저장분을 지워요 (공용 기기에 기록이 남지 않게)
+        if (outUid && synced) { try { localStorage.removeItem(cloudCacheKey(outUid)); } catch (e) {} }
         guestMode = false;
+        state = { items: [], transactions: [] }; // 로그아웃 후 메모리에 남은 계정 기록이 게스트 저장분에 섞이지 않게 비움
         try { localStorage.removeItem(GUEST_CHOSEN_KEY); } catch (e) {}
         revealLoginScreen();
       };
@@ -937,6 +943,7 @@
         if (!currentUser || deletingAccount) return false;
         try {
           await setDoc(doc(db, "ledgers", currentUser.uid), data);
+          lgCloudDirty = false;
           setSyncNote("클라우드에 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
           return true;
         } catch (e) {
@@ -956,6 +963,8 @@
           try {
             const snap = await getDoc(doc(db, "ledgers", user.uid));
             if (snap.exists()) {
+              // 이미 기록이 있는 계정: 게스트 기록은 쓰지 않고 지워요 (안내 문구로 미리 알려줘요)
+              if (guestDataSnapshot) { try { localStorage.removeItem(GUEST_STORAGE_KEY); } catch (e) {} }
               const cloudData = snap.data();
               const cloudTime = cloudData.updatedAt || 0;
               const localTime = localCached.updatedAt || 0;
@@ -975,7 +984,11 @@
               state = guestDataSnapshot;
               state.updatedAt = Date.now();
               saveLocal();
-              await window.__lgSaveCloud(state);
+              const movedOk = await window.__lgSaveCloud(state);
+              if (movedOk) {
+                // 클라우드 저장이 성공한 뒤에만 게스트 쪽 기록을 비워요 (로그아웃 후 게스트 화면에 남지 않게)
+                try { localStorage.removeItem(GUEST_STORAGE_KEY); } catch (e) {}
+              }
               setSyncNote("게스트 모드 기록을 이 계정으로 옮겼어요");
             } else {
               state = localCached;
@@ -983,6 +996,7 @@
             }
           } catch (e) {
             state = localCached;
+            lgCloudDirty = true; // 클라우드와 비교하지 못했으니 아직 안 올라간 것으로 취급
             setSyncNote("클라우드 연결 실패 (이 계정의 이 기기 저장분으로 계속 사용)");
           }
           revealAppScreen();
@@ -1087,7 +1101,14 @@
     if (window.__lgSignIn) window.__lgSignIn();
     else document.getElementById("loginError").textContent = "로그인 모듈을 불러오는 중이에요. 인터넷 연결을 확인하고 잠시 후 다시 눌러주세요.";
   };
-  document.getElementById("loginBtnInline").onclick = () => window.__lgSignIn && window.__lgSignIn();
+  document.getElementById("loginBtnInline").onclick = async () => {
+    if (!window.__lgSignIn) return;
+    if (guestMode && (state.items.length > 0 || state.transactions.length > 0)) {
+      const ok = await lgConfirm("기존 계정으로 로그인하면 게스트 기록은 사라져요.\n(새 계정이면 그대로 옮겨져요)", { ok: "로그인" });
+      if (!ok) return;
+    }
+    window.__lgSignIn();
+  };
   document.getElementById("guestBtn").onclick = () => {
     guestMode = true;
     currentUser = null;
@@ -1903,6 +1924,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
         return {
           items: Array.isArray(parsed.items) ? parsed.items : [],
           transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+          updatedAt: Number(parsed.updatedAt) || 0,
         };
       }
     } catch (e) {}
@@ -1932,10 +1954,12 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     try { localStorage.setItem(key, JSON.stringify(state)); }
     catch (e) { console.error("로컬 저장 실패", e); }
   }
+  var lgCloudDirty = false; // 클라우드에 아직 못 올린 변경이 있는지
   async function saveState() {
     state.updatedAt = Date.now();
     saveLocal();
     if (firebaseReady && currentUser && window.__lgSaveCloud) {
+      lgCloudDirty = true;
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         return;
       }
@@ -2522,8 +2546,8 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
   document.getElementById("newItemName").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("addItemBtn").click(); });
   document.getElementById("newItemBalance").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("addItemBtn").click(); });
 
-  const lgFlush = () => { try { state.updatedAt = Date.now(); saveLocal(); } catch (e) {} };
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { lgFlush(); if (currentUser && firebaseReady && window.__lgSaveCloud && navigator.onLine !== false) window.__lgSaveCloud(state); } });
+  const lgFlush = () => { try { if (!currentUser && !guestMode) return; saveLocal(); } catch (e) {} };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { lgFlush(); if (lgCloudDirty && currentUser && firebaseReady && window.__lgSaveCloud && navigator.onLine !== false) window.__lgSaveCloud(state); } });
   window.addEventListener("pagehide", lgFlush);
 
   document.querySelectorAll(".lg-tab-btn").forEach((btn) => {
