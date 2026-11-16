@@ -883,7 +883,7 @@
       const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
       const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, deleteUser, reauthenticateWithPopup } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-      const { getFirestore, doc, getDoc, setDoc, deleteDoc } =
+      const { getFirestore, doc, getDoc, setDoc, deleteDoc, Bytes } =
         await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
 
       const app = initializeApp(firebaseConfig);
@@ -902,6 +902,7 @@
       };
       window.__lgSignOut = async () => {
         const outUid = currentUser ? currentUser.uid : null;
+        lgCancelCloudTimer();
         let synced = !lgCloudDirty;
         if (!synced && navigator.onLine !== false) { try { synced = await window.__lgSaveCloud(state); } catch (e) {} }
         try { await signOut(auth); } catch (e) {}
@@ -916,6 +917,7 @@
         const user = auth.currentUser;
         if (!user) throw new Error("no-user");
         const uid = user.uid;
+        lgCancelCloudTimer();
         deletingAccount = true; // 삭제 중에는 클라우드 저장이 다시 일어나지 않게 막음
         try {
           await deleteDoc(doc(db, "ledgers", uid));
@@ -940,11 +942,39 @@
         deletingAccount = false;
         revealLoginScreen();
       };
-      window.__lgSaveCloud = async (data) => {
+      /* 기록이 아주 많을 때만(약 700KB 초과) 압축해서 올려요. 그 아래는 예전과 똑같은 형식이라 옛 버전 앱과도 호환돼요 */
+      const LG_COMPRESS_AT = 700 * 1024;
+      const lgGzip = async (str) => new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer());
+      const lgGunzip = async (u8) => await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+      const lgToCloudDoc = async (data) => {
+        try {
+          if (Bytes && typeof CompressionStream === "function" && data.transactions && data.transactions.length > 3000) {
+            const json = JSON.stringify(data);
+            if (new TextEncoder().encode(json).length > LG_COMPRESS_AT) {
+              const gz = await lgGzip(json);
+              if ((await lgGunzip(gz)) === json) return { v: 2, updatedAt: data.updatedAt || 0, gz: Bytes.fromUint8Array(gz) }; // 풀어서 똑같은지 확인한 뒤에만 사용
+            }
+          }
+        } catch (e) {}
+        return data;
+      };
+      const lgFromCloudDoc = async (d) => {
+        if (d && d.gz && !Array.isArray(d.items)) {
+          const s2 = JSON.parse(await lgGunzip(d.gz.toUint8Array()));
+          if (!s2 || !Array.isArray(s2.items) || !Array.isArray(s2.transactions)) throw new Error("bad-cloud-doc");
+          return s2;
+        }
+        return d;
+      };
+      let lgSaveQueue = Promise.resolve(); // 클라우드 저장은 한 번에 하나씩, 순서대로
+      const lgDoSaveCloud = async (data) => {
         if (!currentUser || deletingAccount) return false;
         try {
-          await setDoc(doc(db, "ledgers", currentUser.uid), data);
-          lgCloudDirty = false;
+          const stamp = data.updatedAt;
+          const payload = await lgToCloudDoc(data);
+          if (!currentUser || deletingAccount) return false;
+          await setDoc(doc(db, "ledgers", currentUser.uid), payload);
+          if (data.updatedAt === stamp) lgCloudDirty = false; // 저장하는 사이에 또 바뀌었다면 아직 안 올라간 것으로 둬요
           setSyncNote("클라우드에 저장됨 · " + new Date().toLocaleTimeString("ko-KR"));
           return true;
         } catch (e) {
@@ -952,9 +982,11 @@
           return false;
         }
       };
+      window.__lgSaveCloud = (data) => { const run = lgSaveQueue.then(() => lgDoSaveCloud(data)); lgSaveQueue = run.catch(() => {}); return run; };
 
       onAuthStateChanged(auth, async (user) => {
         currentUser = user;
+        lgCancelCloudTimer();
         if (user) {
           try { localStorage.removeItem(GUEST_CHOSEN_KEY); } catch (e) {}
           const wasGuestWithData = guestMode && (state.items.length > 0 || state.transactions.length > 0);
@@ -966,7 +998,7 @@
             if (snap.exists()) {
               // 이미 기록이 있는 계정: 게스트 기록은 쓰지 않고 지워요 (안내 문구로 미리 알려줘요)
               if (guestDataSnapshot) { try { localStorage.removeItem(GUEST_STORAGE_KEY); } catch (e) {} }
-              const cloudData = snap.data();
+              const cloudData = await lgFromCloudDoc(snap.data());
               const cloudTime = cloudData.updatedAt || 0;
               const localTime = localCached.updatedAt || 0;
               if (localTime > cloudTime) {
@@ -1902,6 +1934,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     state = { items: data.items, transactions: data.transactions };
     openItem = null; editingTxId = null; editingItemName = null;
     await saveState();
+    await lgSaveCloudNow();
     render();
     backupNote("복원했어요. (항목 " + data.items.length + "개, 내역 " + data.transactions.length + "건)", true);
   };
@@ -1957,6 +1990,13 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
     catch (e) { console.error("로컬 저장 실패", e); }
   }
   var lgCloudDirty = false; // 클라우드에 아직 못 올린 변경이 있는지
+  var lgSaveTimer = null;
+  function lgCancelCloudTimer() { if (lgSaveTimer) { clearTimeout(lgSaveTimer); lgSaveTimer = null; } }
+  function lgScheduleCloud() { /* 입력이 멈춘 뒤 3초 후 한 번만 올려요 (기기에는 바로 저장돼요) */
+    lgCancelCloudTimer();
+    lgSaveTimer = setTimeout(function () { lgSaveTimer = null; if (lgCloudDirty && currentUser && window.__lgSaveCloud && navigator.onLine !== false) window.__lgSaveCloud(state); }, 3000);
+  }
+  async function lgSaveCloudNow() { lgCancelCloudTimer(); if (lgCloudDirty && currentUser && window.__lgSaveCloud && navigator.onLine !== false) return window.__lgSaveCloud(state); }
   async function saveState() {
     state.updatedAt = Date.now();
     saveLocal();
@@ -1965,7 +2005,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         return;
       }
-      await window.__lgSaveCloud(state);
+      lgScheduleCloud();
     } else {
       setSyncNote("저장 완료 · " + new Date().toLocaleTimeString("ko-KR"));
     }
@@ -2549,7 +2589,7 @@ function lgForcedDark(){ return false; } /* 그래프 색은 선택한 테마(�
   document.getElementById("newItemBalance").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("addItemBtn").click(); });
 
   const lgFlush = () => { try { if (!currentUser && !guestMode) return; saveLocal(); } catch (e) {} };
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { lgFlush(); if (lgCloudDirty && currentUser && firebaseReady && window.__lgSaveCloud && navigator.onLine !== false) window.__lgSaveCloud(state); } });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { lgFlush(); lgSaveCloudNow(); } });
   window.addEventListener("pagehide", lgFlush);
 
   document.querySelectorAll(".lg-tab-btn").forEach((btn) => {
